@@ -14,5 +14,5 @@ logfile = LogFile.fromFullPath("builder.log", rotateLength=rotateLength,
 application.setComponent(ILogObserver, FileLogObserver(logfile).emit)
 
 service.IProcess(application).processName = "simplebbbd"
-s = main('10.1.15.7', use_tac=True)
+s = main('127.0.0.1', use_tac=True)
 s.setServiceParent(application)
