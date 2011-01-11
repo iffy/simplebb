@@ -1,0 +1,17 @@
+
+To run a server daemon:
+
+    twistd -y server.tac
+
+
+To run a builder daemon:
+
+    # create some build scripts
+    twistd -y builder.tac
+
+
+
+In order to build, you need to have build scripts in ~/.simplebb/buildscripts/
+
+
+

@@ -1,0 +1,5 @@
+*.pyc
+builder.log
+*.tgz
+*.log
+*.pid
