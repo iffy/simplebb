@@ -13,7 +13,7 @@ class ClientProto(amp.AMP):
     
     def connectionMade(self):
         amp.AMP.connectionMade(self)
-        self.callRemote(Identify, kind='builder', name=os.uname()[1])
+        self.callRemote(Identify, kind='builder', name=self.factory.name)
 
     def acceptBuildSuggestion(self, projectName, revision):
         print 'suggested to build: %s %s' % (projectName, revision)
@@ -27,6 +27,7 @@ class MyClient(ClientFactory):
     conn = None
     protocol = ClientProto
     retryInterval = 1.0
+    name = os.uname()[1]
     
     def clientConnectionLost(self, connector, reason):
         print 'connection lost'
@@ -93,9 +94,10 @@ class MyClient(ClientFactory):
         return self.sendResult(name, revision, returnCode)
 
 
-def main(host, mybuildscriptdir=None, port=7900, use_tac=False):
+def main(host, mybuildscriptdir=None, name=None, port=7900, use_tac=False):
     global buildscriptdir
     f = MyClient()
+    f.name = name or f.name
     if mybuildscriptdir:
         buildscriptdir = FilePath(mybuildscriptdir)
         print 'Will build scripts located in %s' % buildscriptdir.path
