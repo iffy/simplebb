@@ -64,6 +64,7 @@ class MyClient(ClientFactory):
         """
         Runs the script in the buildscripts dir
         """
+        global buildscriptdir
         script = buildscriptdir.child(name)
         d = defer.Deferred()
         if not script.exists():
@@ -92,8 +93,12 @@ class MyClient(ClientFactory):
         return self.sendResult(name, revision, returnCode)
 
 
-def main(host, port=7900, use_tac=False):
+def main(host, mybuildscriptdir=None, port=7900, use_tac=False):
+    global buildscriptdir
     f = MyClient()
+    if mybuildscriptdir:
+        buildscriptdir = FilePath(mybuildscriptdir)
+        print 'Will build scripts located in %s' % buildscriptdir.path
     if use_tac:
         from twisted.application.internet import TCPClient
         return TCPClient(host, port, f)
