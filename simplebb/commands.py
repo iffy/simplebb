@@ -29,3 +29,17 @@ class SuggestBuild(amp.Command):
         ('revision', amp.String()),
     ]
     response = []
+
+
+#------------------------------------------------------------------------------
+# server to client
+#------------------------------------------------------------------------------
+class SendStatus(amp.Command):
+    arguments = [
+        ('projectName', amp.String()),
+        ('revision', amp.String()),
+        ('builderName', amp.String()),
+        ('returnCode', amp.Integer()),
+    ]
+    response = []
+

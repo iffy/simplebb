@@ -1,26 +1,54 @@
 from twisted.protocols import amp
-from simplebb.commands import SendResult, SuggestBuild, Identify
+from simplebb.commands import SendResult, SuggestBuild, Identify, SendStatus
 from twisted.internet.protocol import ClientFactory
 from twisted.internet import reactor, utils, defer
 from twisted.python.filepath import FilePath
 import os
 import sys
 
-buildscriptdir = FilePath(os.environ['HOME']).child('.simplebb').child('buildscripts')
+from twisted.python import log
 
+buildscriptdir = FilePath(os.environ['HOME']).child('.simplebb').child('buildscripts')
+statusFileLogObserver = None
 
 class ClientProto(amp.AMP):
     
+    statusData = None
+    
     def connectionMade(self):
+        self.statusData = {}
         amp.AMP.connectionMade(self)
         self.callRemote(Identify, kind='builder', name=self.factory.name)
 
     def acceptBuildSuggestion(self, projectName, revision):
-        print 'suggested to build: %s %s' % (projectName, revision)
+        print '<-- build: %s %s' % (projectName, revision)
         self.factory.buildProject(projectName, revision)
         return {}
     SuggestBuild.responder(acceptBuildSuggestion)
     
+    @SendStatus.responder
+    def acceptStatus(self, projectName, revision, builderName, returnCode):
+        global statusFileLogObserver
+        #print '<-- status: %s %s %s %s' % (returnCode, projectName, revision, builderName)
+        if projectName not in self.statusData:
+            self.statusData[projectName] = {}
+        projectStatus = self.statusData[projectName]
+        if revision not in projectStatus:
+            projectStatus[revision] = []
+        projectStatus[revision].append((returnCode, builderName))
+        
+        passfail = 'FAILED'
+        if not returnCode:
+            passfail = 'PASSED'
+        logmsg = '%s %4s %s/%s "%s"' % (
+                    passfail,
+                    returnCode,
+                    projectName,
+                    revision,
+                    builderName,
+                )
+        log.msg(logmsg, isBuildReport=True)
+        return {}
 
 
 class MyClient(ClientFactory):  
@@ -30,15 +58,15 @@ class MyClient(ClientFactory):
     name = os.uname()[1]
     
     def clientConnectionLost(self, connector, reason):
-        print 'connection lost'
+        print '* connection lost'
         self.reconnect(connector)
 
     def clientConnectionFailed(self, connector, reason):
-        print 'connection failed'
+        print '* connection failed'
         self.reconnect(connector)
 
     def buildProtocol(self, addr):
-        print 'connected to server'
+        print '* connected to server'
         proto = ClientFactory.buildProtocol(self, addr)
         self.retryInterval = 1
         self.conn = proto
@@ -47,7 +75,7 @@ class MyClient(ClientFactory):
         return proto
 
     def reconnect(self, connector):
-        print 'will try to reconnect in %.2fs' % self.retryInterval
+        print '* will try to reconnect in %.2fs' % self.retryInterval
         reactor.callLater(self.retryInterval, self._reconnect, connector)
         self.retryInterval = min(self.retryInterval * 1.3, 3600)
 
@@ -85,8 +113,8 @@ class MyClient(ClientFactory):
         if returnCode:
             print '='*30
             print 'FAILED', returnCode, name, revision
-            print '='*30
             print notes
+            print '='*30
         else:
             print '-'*30
             print 'SUCCESS', returnCode, name, revision
@@ -94,13 +122,27 @@ class MyClient(ClientFactory):
         return self.sendResult(name, revision, returnCode)
 
 
-def main(host, mybuildscriptdir=None, name=None, port=7900, use_tac=False):
-    global buildscriptdir
+def statusLogObserver(d):
+    global statusFileLogObserver
+    #print 'observer?'
+    if statusFileLogObserver and 'isBuildReport' in d:
+        statusFileLogObserver.emit(d)
+
+def main(host, mybuildscriptdir=None, name=None, statusLogFile='buildstatus.log', port=7900, use_tac=False):
+    global buildscriptdir, statusFileLogObserver
     f = MyClient()
     f.name = name or f.name
+    
+    # set up the status log
+    if statusLogFile:
+        statusLogFile = FilePath(statusLogFile)
+        statusFileLogObserver = log.FileLogObserver(open(statusLogFile.path, 'a'))
+        log.addObserver(statusLogObserver)
+    
+    # where the build scripts are
     if mybuildscriptdir:
         buildscriptdir = FilePath(mybuildscriptdir)
-        print 'Will build scripts located in %s' % buildscriptdir.path
+    
     if use_tac:
         from twisted.application.internet import TCPClient
         return TCPClient(host, port, f)
