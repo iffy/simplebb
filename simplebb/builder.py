@@ -63,7 +63,7 @@ class FileBuild(Build):
 
 class ProjectRepo:
     """
-    I wrap the directory where project build steps are stored.
+    I wrap the directory where project build steps are stored.  You can ask me to build projects.
     """
     
     def __init__(self, path=None):
