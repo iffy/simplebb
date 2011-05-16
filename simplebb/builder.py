@@ -82,9 +82,14 @@ class ProjectRepo:
         test        optional test file name if the inside the project dir
         """
         project_path = self.path.child(project)
-        if test is None:
-            yield FileBuild(project_path)
-
+        if project_path.isfile():
+            # file
+            if test is None:
+                yield FileBuild(project_path)
+        else:
+            # directory
+            for child in project_path.globChildren('*'):
+                yield FileBuild(child)
 
 
 
