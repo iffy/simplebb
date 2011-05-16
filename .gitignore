@@ -3,3 +3,4 @@ builder.log
 *.tgz
 *.log
 *.pid
+*_trial_temp
