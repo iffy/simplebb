@@ -249,54 +249,23 @@ class ProjectRepoTest(TestCase):
                 self.version = version
                 self.done.callback(self)
                 
-        called = []
         pr = ProjectRepo()
-        pr.monitorBuild = called.append
         
         builds = [FakeBuild(), FakeBuild()]
-        pr.runBuilds(builds, 'foo')
+        ret = pr.runBuilds(builds, 'foo')
         
         self.assertTrue(builds[0].done.called)
         self.assertEqual(builds[0].version, 'foo')
-        self.assertEqual(called[0], builds[0])
         
         self.assertTrue(builds[1].done.called)
         self.assertEqual(builds[1].version, 'foo')
-        self.assertEqual(called[1], builds[1])
+        
+        self.assertEqual(len(ret), 2, "The Build.done Deferreds should have been returned")
+        self.assertEqual(set(ret), set([x.done for x in builds]))
 
 
-    def test_monitorBuild_callback(self):
-        """
-        monitoring a build should add a callback to the build.done
-        """
-        pr = ProjectRepo()
-        called = []
-        pr.buildDone = called.append
-        
-        build = Build()
-        pr.monitorBuild(build)
-        
-        # simulate build being done
-        build.done.callback(build)
-        
-        self.assertEqual(called, [build])
 
-
-    def test_monitorBuild_callback(self):
-        """
-        monitoring a build should add a errback to the build.done
-        """
-        pr = ProjectRepo()
-        called = []
-        pr.buildDone = called.append
         
-        build = Build()
-        pr.monitorBuild(build)
-        
-        # simulate build being done
-        build.done.errback(build)
-        
-        self.assertEqual(called, [build])
 
 
 

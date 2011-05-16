@@ -97,19 +97,11 @@ class ProjectRepo:
         """
         Run the given builds for the given version
         """
+        ret = []
         for build in builds:
-            self.monitorBuild(build)
             build.run(version)
-    
-    
-    def monitorBuild(self, build):
-        """
-        Monitor a build for completion
-        """
-        def eb(r):
-            return r.value
-        build.done.addErrback(eb)
-        build.done.addCallback(self.buildDone)
+            ret.append(build.done)
+        return ret
 
 
 
