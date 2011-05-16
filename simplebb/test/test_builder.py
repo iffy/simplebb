@@ -239,5 +239,26 @@ class ProjectRepoTest(TestCase):
         self.assertEqual(r[0].path, test1)
 
 
+    def test_runBuilds(self):
+        """
+        should run each of the builds
+        """
+        class FakeBuild(Build):
+            version = None
+            def run(self, version):
+                self.version = version
+                self.done.callback(self)
+                
+        pr = ProjectRepo()
+        
+        builds = [FakeBuild(), FakeBuild()]
+        pr.runBuilds(builds, 'foo')
+        
+        self.assertTrue(builds[0].done.called)
+        self.assertEqual(builds[0].version, 'foo')
+        self.assertTrue(builds[1].done.called)
+        self.assertEqual(builds[1].version, 'foo')
+
+
 
 

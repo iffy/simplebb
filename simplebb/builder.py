@@ -66,8 +66,8 @@ class ProjectRepo:
     I wrap the directory where project build steps are stored.
     """
     
-    def __init__(self, path):
-        if isinstance(path, FilePath):
+    def __init__(self, path=None):
+        if isinstance(path, FilePath) or path is None:
             self.path = path
         else:
             self.path = FilePath(path)
@@ -91,7 +91,14 @@ class ProjectRepo:
             glob_pattern = test or '*'
             for child in project_path.globChildren(glob_pattern):
                 yield FileBuild(child)
-
+    
+    
+    def runBuilds(self, builds, version):
+        """
+        Run the given builds for the given version
+        """
+        for build in builds:
+            build.run(version)
 
 
 
