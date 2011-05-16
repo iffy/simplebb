@@ -61,3 +61,29 @@ class FileBuild(Build):
 
         
 
+class ProjectRepo:
+    """
+    I wrap the directory where project build steps are stored.
+    """
+    
+    def __init__(self, path):
+        if isinstance(path, FilePath):
+            self.path = path
+        else:
+            self.path = FilePath(path)
+    
+    
+    def getBuilds(self, project):
+        """
+        Return a generator of a list of FileBuilds that should be built.
+        """
+        project_path = self.path.child(project)
+        yield FileBuild(project_path)
+
+
+
+
+
+
+
+

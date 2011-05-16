@@ -3,7 +3,7 @@ from twisted.python.filepath import FilePath
 from twisted.internet import defer
 
 
-from simplebb.builder import FileBuild, Build
+from simplebb.builder import ProjectRepo, FileBuild, Build
 from simplebb.builder import FileNotFoundError
 
 
@@ -146,8 +146,61 @@ class FileBuildTest(TestCase):
         self.assertRaises(FileNotFoundError, fb.run, 'version')
 
 
+
+class ProjectRepoTest(TestCase):
+
+    
+    def test_path(self):
+        """
+        Can be initialized with a string filename
+        """
+        f = FilePath(self.mktemp())
+        pr = ProjectRepo(f.path)
+        self.assertEqual(pr.path, f)
+    
+    
+    def test_path_filepath(self):
+        """
+        Can be initialized with a FilePath
+        """
+        f = FilePath(self.mktemp())
+        pr = ProjectRepo(f)
+        self.assertEqual(pr.path, f)
+    
+    
+    def test_getBuilds_file(self):
+        """
+        If the object in the directory that corresponds to a requested
+        project is a file, return a FileBuild for that file.
+        """
+        f = FilePath(self.mktemp())
+        f.makedirs()
+        foo = f.child('foo')
+        foo.setContent('something')
+        
+        pr = ProjectRepo(f)
+        r = list(pr.getBuilds('foo'))
+        
+        self.assertEqual(len(r), 1)
+        self.assertEqual(r[0].path, foo)
+    
+    
+    def test_getBuilds_file_withTest(self):
+        """
+        If the object in the directory that corresponds to a requested
+        project is a file, and a specific test is also request, return nothing.
+        """
+        return
         
         
+        
+        f = FilePath(self.mktemp())
+        f.makedirs()
+        foo = f.child('foo')
+        foo.setContent('something')
+        
+        pr = ProjectRepo(f)
+        r = list(pr.getBuilds('foo'))
     
     
     
