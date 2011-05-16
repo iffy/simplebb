@@ -190,17 +190,15 @@ class ProjectRepoTest(TestCase):
         If the object in the directory that corresponds to a requested
         project is a file, and a specific test is also request, return nothing.
         """
-        return
-        
-        
-        
         f = FilePath(self.mktemp())
         f.makedirs()
         foo = f.child('foo')
         foo.setContent('something')
         
         pr = ProjectRepo(f)
-        r = list(pr.getBuilds('foo'))
+        r = list(pr.getBuilds('foo', 'test1'))
+        
+        self.assertEqual(len(r), 0)
     
     
     

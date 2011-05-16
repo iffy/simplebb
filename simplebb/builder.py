@@ -73,12 +73,17 @@ class ProjectRepo:
             self.path = FilePath(path)
     
     
-    def getBuilds(self, project):
+    def getBuilds(self, project, test=None):
         """
         Return a generator of a list of FileBuilds that should be built.
+        
+        project     string name of project that corresponds to file/dir in self.path
+        
+        test        optional test file name if the inside the project dir
         """
         project_path = self.path.child(project)
-        yield FileBuild(project_path)
+        if test is None:
+            yield FileBuild(project_path)
 
 
 
