@@ -4,6 +4,8 @@ from twisted.internet import defer
 
 
 from simplebb.builder import FileBuild, Build
+from simplebb.builder import FileNotFoundError
+
 
 
 class BuildTest(TestCase):
@@ -56,10 +58,20 @@ class BuildTest(TestCase):
         self.assertEqual(b.status, 1)
         
         return b.done
+    
+    
+    def test_run(self):
+        """
+        Build.run is meant to be overwritten
+        """
+        b = Build()
+        self.assertRaises(NotImplementedError, b.run)
 
 
 
 class FileBuildTest(TestCase):
+    
+    timeout = 3
     
     
     def test_subClass(self):
@@ -69,11 +81,54 @@ class FileBuildTest(TestCase):
     
     def test_initFilename(self):
         """
-        Should save the initialized filename
+        Should save the initialized filename as a FilePath
         """
         f = self.mktemp()
         fb = FileBuild(f)
         self.assertEqual(fb.path, FilePath(f))
+    
+    
+    def test_initFilePath(self):
+        """
+        Should save a given FilePath as as the path
+        """
+        f = FilePath(self.mktemp())
+        fb = FileBuild(f)
+        self.assertEqual(fb.path, f)
+    
+    
+    def test_run(self):
+        """
+        The file should be run and the result returned.
+        """
+        f = FilePath(self.mktemp())
+        f.setContent('#!/bin/bash\nexit 0\n')
+        f.chmod(0777)
+        
+        fb = FileBuild(f)
+        def cb(res):
+            self.assertEqual(res.status, 0)
+        fb.done.addCallback(cb)
+        
+        fb.run()
+        
+        return fb.done
+
+
+    def test_run_dne(self):
+        """
+        A file that does not exist can not be run
+        """
+        f = FilePath(self.mktemp())
+        f.makedirs()
+        fb = FileBuild(f.child('foo'))
+        self.assertRaises(FileNotFoundError, fb.run)
+
+
+        
+        
+    
+    
     
 
 

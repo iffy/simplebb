@@ -1,5 +1,8 @@
-from twisted.internet import defer
+from twisted.internet import defer, utils
 from twisted.python.filepath import FilePath
+
+
+class FileNotFoundError(Exception): pass
 
 
 
@@ -25,6 +28,13 @@ class Build:
         else:
             self.done.callback(self)
 
+    
+    def run(self):
+        """
+        Start this Build (whatever that means)
+        """
+        raise NotImplementedError("You must override this method")
+
 
 
 class FileBuild(Build):
@@ -33,5 +43,21 @@ class FileBuild(Build):
     """
     
     def __init__(self, path):
-        self.path = FilePath(path)
+        Build.__init__(self)
+        if isinstance(path, FilePath):
+            self.path = path
+        else:
+            self.path = FilePath(path)
+    
+    
+    def run(self):
+        """
+        Run the file.
+        """
+        if not self.path.exists():
+            raise FileNotFoundError('File not found')
+        d = utils.getProcessValue(self.path.path)
+        d.addCallback(self.finish)
+
+        
 
