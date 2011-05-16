@@ -220,8 +220,24 @@ class ProjectRepoTest(TestCase):
         self.assertEqual(set([x.path for x in r]), set([test1, test2]))
     
     
-    
-
-
-
+    def test_getBuilds_dir_withTest(self):
+        """
+        If the project has a directory, a single test may be chosen.
+        """
+        root = FilePath(self.mktemp())
+        foo = root.child('foo')
+        foo.makedirs()
+        test1 = foo.child('test1')
+        test1.setContent('content of test1')
+        test2 = foo.child('test2')
+        test2.setContent('content of test2')
+                
+        pr = ProjectRepo(root)
+        r = list(pr.getBuilds('foo', 'test1'))
         
+        self.assertEqual(len(r), 1)
+        self.assertEqual(r[0].path, test1)
+
+
+
+

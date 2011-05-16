@@ -88,7 +88,8 @@ class ProjectRepo:
                 yield FileBuild(project_path)
         else:
             # directory
-            for child in project_path.globChildren('*'):
+            glob_pattern = test or '*'
+            for child in project_path.globChildren(glob_pattern):
                 yield FileBuild(child)
 
 
