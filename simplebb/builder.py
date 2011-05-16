@@ -102,6 +102,14 @@ class ProjectRepo:
             build.run(version)
             ret.append(build.done)
         return ret
+    
+    
+    def buildProject(self, project, version, test=None):
+        """
+        build a project of a given version
+        """
+        builds = self.getBuilds(project, test)
+        return self.runBuilds(builds, version)
 
 
 

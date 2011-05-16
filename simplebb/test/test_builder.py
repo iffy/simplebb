@@ -264,7 +264,28 @@ class ProjectRepoTest(TestCase):
         self.assertEqual(set(ret), set([x.done for x in builds]))
 
 
+    def test_buildProject(self):
+        """
+        Should call getBuilds and runBuilds and return the result of runBuilds
+        """
+        pr = ProjectRepo()
+        
+        called = []
+        def getBuilds(project, test=None):
+            called.append((project, test))
+            return 'get result'
+        pr.getBuilds = getBuilds
+        
+        def runBuilds(builds, version):
+            called.append((builds, version))
+            return 'run result'
+        pr.runBuilds = runBuilds
 
+        r = pr.buildProject('foo', 'version 1', 'test 1')
+        
+        self.assertEqual(called[0], ('foo', 'test 1'))
+        self.assertEqual(called[1], ('get result', 'version 1'))
+        self.assertEqual(r, 'run result')
         
 
 
