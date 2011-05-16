@@ -3,7 +3,7 @@ from twisted.python.filepath import FilePath
 from twisted.internet import defer
 
 
-from simplebb.builder import DirectoryBuilder, FileBuild, Build
+from simplebb.builder import FileBuild, Build
 
 
 class BuildTest(TestCase):
@@ -62,38 +62,20 @@ class BuildTest(TestCase):
 class FileBuildTest(TestCase):
     
     
+    def test_subClass(self):
+        self.assertTrue(issubclass(FileBuild, Build),
+            "FileBuild should subclass Build")
+
+    
     def test_initFilename(self):
         """
         Should save the initialized filename
         """
         f = self.mktemp()
         fb = FileBuild(f)
-        self.assertEqual(fb.filename, f)
-
-
-
-class DirectoryBuilderTest(TestCase):
-
+        self.assertEqual(fb.path, FilePath(f))
     
-    def test_attrs(self):
-        """
-        Should have these attributes.
-        """
-        d = DirectoryBuilder()
-        self.assertEqual(d.root, None)
-    
-    
-    def test_findBuilds_file(self):
-        """
-        A directory build should be able to find a build named by an executable
-        file
-        """
-        d = FilePath(self.mktemp())
-        d.makedirs()
-        f = d.child('foo')
-        f.setContent('')
-        f.chmod(0100); # owner-executable
-        
-        db = DirectoryBuilder(d.path)
-        db.findBuilds
+
+
+
         

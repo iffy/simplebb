@@ -1,4 +1,5 @@
 from twisted.internet import defer
+from twisted.python.filepath import FilePath
 
 
 
@@ -26,20 +27,11 @@ class Build:
 
 
 
-class FileBuild(object):
+class FileBuild(Build):
     """
-    I wrap a file for building.
-    """
-    
-    def __init__(self, filename):
-        self.filename = filename
-
-
-
-class DirectoryBuilder(object):
-    """
-    I am a Builder that looks for build instructions from the filesystem.
+    I wrap an executable file for building.
     """
     
-    root = None
-    
+    def __init__(self, path):
+        self.path = FilePath(path)
+
