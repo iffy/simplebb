@@ -10,6 +10,7 @@ from simplebb.builder import FileNotFoundError
 
 class BuildTest(TestCase):
 
+
     timeout = 1
     
     
@@ -65,7 +66,7 @@ class BuildTest(TestCase):
         Build.run is meant to be overwritten
         """
         b = Build()
-        self.assertRaises(NotImplementedError, b.run)
+        self.assertRaises(NotImplementedError, b.run, 'version 1')
 
 
 
@@ -99,10 +100,10 @@ class FileBuildTest(TestCase):
     
     def test_run(self):
         """
-        The file should be run and the result returned.
+        The file should be run with the version as the first arg
         """
         f = FilePath(self.mktemp())
-        f.setContent('#!/bin/bash\nexit 0\n')
+        f.setContent('#!/bin/bash\nexit $1\n')
         f.chmod(0777)
         
         fb = FileBuild(f)
@@ -110,7 +111,27 @@ class FileBuildTest(TestCase):
             self.assertEqual(res.status, 0)
         fb.done.addCallback(cb)
         
-        fb.run()
+        fb.run('0')
+        
+        return fb.done
+
+
+    def test_run_version(self):
+        """
+        The version should be passed as the first arg
+        """
+        f = FilePath(self.mktemp())
+        f.setContent('#!/bin/bash\nexit $1\n')
+        f.chmod(0777)
+        
+        fb = FileBuild(f)
+        def cb(res):
+            self.fail("Should errback, not callback")
+        def eb(res):
+            self.assertEqual(res.value.status, 1)
+        fb.done.addCallbacks(cb, eb)
+        
+        fb.run('1')
         
         return fb.done
 
@@ -122,7 +143,7 @@ class FileBuildTest(TestCase):
         f = FilePath(self.mktemp())
         f.makedirs()
         fb = FileBuild(f.child('foo'))
-        self.assertRaises(FileNotFoundError, fb.run)
+        self.assertRaises(FileNotFoundError, fb.run, 'version')
 
 
         

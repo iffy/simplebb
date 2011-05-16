@@ -29,9 +29,9 @@ class Build:
             self.done.callback(self)
 
     
-    def run(self):
+    def run(self, version):
         """
-        Start this Build (whatever that means)
+        Start this Build (whatever that means) with the given version
         """
         raise NotImplementedError("You must override this method")
 
@@ -50,13 +50,13 @@ class FileBuild(Build):
             self.path = FilePath(path)
     
     
-    def run(self):
+    def run(self, version):
         """
         Run the file.
         """
         if not self.path.exists():
             raise FileNotFoundError('File not found')
-        d = utils.getProcessValue(self.path.path)
+        d = utils.getProcessValue(self.path.path, args=(version,))
         d.addCallback(self.finish)
 
         
