@@ -44,7 +44,20 @@ class FileSystemBuilderTest(TestCase):
         if a project is a single file, return a Build for that project.
         """
         f = FilePath(self.mktemp())
+        f.makedirs()
         b = FileSystemBuilder(f)
+        
+        # no file
+        r = b.findBuilds('foo')
+        self.assertEqual(list(r), [])
+        
+        # file
+        f.child('foo').setContent('something')
+        r = list(b.findBuilds('foo'))
+        self.assertEqual(len(r), 1)
+        self.assertEqual(r[0].project, 'foo')
+        self.assertEqual(r[0].builder, b)
+        
         
 
     def test_requestBuild(self):

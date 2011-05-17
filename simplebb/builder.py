@@ -2,6 +2,7 @@ from zope.interface import implements
 from twisted.python.filepath import FilePath
 
 from simplebb.interface import IBuilder
+from simplebb.build import FileBuild
 
 
 
@@ -26,3 +27,18 @@ class FileSystemBuilder:
         """
         Find the build in the file system and start it.
         """
+    
+    
+    def findBuilds(self, project, test_path=None):
+        """
+        Return a list of Builds that match the given criteria
+        """
+        p = self.path.child(project)
+        if p.exists():
+            b = FileBuild(p)
+            b.project = project
+            b.builder = self
+            yield b
+
+
+
