@@ -1,10 +1,12 @@
 from twisted.trial.unittest import TestCase
 from twisted.python.filepath import FilePath
 
+from twisted.internet.protocol import Factory
 
 from simplebb.main import Glue
 from simplebb.server import RequestManager
 from simplebb.builder import ProjectRepo
+from simplebb.shell import ShellProtocol
 
 
 class GlueTest(TestCase):
@@ -18,12 +20,12 @@ class GlueTest(TestCase):
         self.assertTrue(isinstance(g.requestManager, RequestManager))
     
     
-    def test_getServices(self):
+    def test_services(self):
         """
         Should return [] by default
         """
         g = Glue()
-        self.assertEqual(list(g.getServices()), [])
+        self.assertEqual(g.services, [])
     
     
     def test_addProjectRoot(self):
@@ -40,7 +42,7 @@ class GlueTest(TestCase):
     
     def test_useApplication(self):
         """
-        call setServiceParent on each getServices
+        call setServiceParent on each service
         """
         class FakeService:
             def __init__(self):
@@ -49,14 +51,31 @@ class GlueTest(TestCase):
                 self.called.append(application)
         
         g = Glue()
-        services = [FakeService(), FakeService()]
-        g.getServices = lambda: services
+        g.services = [FakeService(), FakeService()]
         
         o = object()
         g.useApplication(o)
         
-        self.assertEqual(services[0].called, [o])
-        self.assertEqual(services[1].called, [o])
+        self.assertEqual(g.services[0].called, [o])
+        self.assertEqual(g.services[1].called, [o])
+    
+    
+    def test_startTelnetShell(self):
+        """
+        You can have shell access via telnet with startTelnetShell
+        """
+        g = Glue()
+        g.startTelnetShell(5678)
+        
+        self.assertEqual(len(g.services), 1)
+        
+        service = g.services[0]
+        port = service.args[0]
+        self.assertEqual(port, 5678)
+        
+        factory = service.args[1]
+        self.assertEqual(factory.brain, g.requestManager)
+        self.assertEqual(factory.protocol, ShellProtocol) 
 
 
 
