@@ -47,19 +47,15 @@ class Build:
         Mark this build as done with the given integer status
         """
         self.status = status
-        if self.status:
-            self.done.errback(self)
-        else:
-            self.done.callback(self)
+        self.done.callback(self)
 
     
     def run(self, version):
         """
         Start this Build (whatever that means) with the given version
         """
-        self.status = 0
         self.version = version
-        self.done.callback(self)
+        self.finish(self.status)
     
     
     def getTag(self):
@@ -148,6 +144,7 @@ class ProjectRepo:
         for build in builds:
             build.run(version)
             ret.append(build.done)
+            build.done.addCallback(self._cb_done)
         return ret
     
     
@@ -172,7 +169,14 @@ class ProjectRepo:
         """
         self._notifyBuiltFuncs.append(func)
 
-
+    
+    def _cb_done(self, build):
+        """
+        Called when a build is done successfully, runs the previously registered
+        notifyFuncs
+        """
+        for f in self._notifyBuiltFuncs:
+            f(build.getTag(), build.status)
 
 
 

@@ -61,11 +61,9 @@ class BuildTest(TestCase):
         """
         b = Build()
         
-        def eb_done(res):
-            self.assertEqual(res.value, b)
         def cb_done(res):
-            self.fail("Should errback, not callback")
-        b.done.addCallbacks(cb_done, eb_done)
+            self.assertEqual(res, b)
+        b.done.addCallback(cb_done)
         
         b.finish(1)
         self.assertEqual(b.status, 1)
@@ -83,7 +81,7 @@ class BuildTest(TestCase):
             self.assertEqual(res, b)
         
         b.run('version')
-        self.assertEqual(b.status, 0)
+        self.assertEqual(b.status, None)
         self.assertEqual(b.version, 'version')
         return b.done
 
@@ -146,10 +144,8 @@ class FileBuildTest(TestCase):
         
         fb = FileBuild(f)
         def cb(res):
-            self.fail("Should errback, not callback")
-        def eb(res):
-            self.assertEqual(res.value.status, 1)
-        fb.done.addCallbacks(cb, eb)
+            self.assertEqual(res.status, 1)
+        fb.done.addCallback(cb)
         
         fb.run('1')
         
@@ -314,15 +310,33 @@ class ProjectRepoTest(TestCase):
     
     def test_notifyBuilt(self):
         """
-        notifyBuilt should save a function for calling after something is built
+        When builds are run via runBuilds, they should call all the funcs in notifyBuilt
         """
-        pr = ProjectRepo()
-        self.assertEqual(pr._notifyBuiltFuncs, [])
+        called = []
+        def f(tag, status):
+            called.append(('F', tag, status))
+        def g(tag, status):
+            called.append(('G', tag, status))
         
-        def f(status):
-            pass
+        pr = ProjectRepo()
         pr.notifyBuilt(f)
-        self.assertEqual(pr._notifyBuiltFuncs, [f])
+        pr.notifyBuilt(g)
+        
+        b = Build()
+        b.status = 0
+        b2 = Build()
+        b2.status = 1
+        pr.runBuilds([b, b2], 'version')
+        
+        self.assertEqual(called[0], ('F', b.getTag(), b.status))
+        self.assertEqual(called[1], ('G', b.getTag(), b.status))
+        self.assertEqual(called[2], ('F', b2.getTag(), b2.status))
+        self.assertEqual(called[3], ('G', b2.getTag(), b2.status))
+        
+        
+        
+        
+        
         
 
 
