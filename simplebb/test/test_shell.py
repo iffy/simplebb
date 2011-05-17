@@ -164,6 +164,68 @@ class ShellProtocolTest(TestCase):
         r = s.runCmd(*['foo', 'arg1'])
         self.assertEqual(r, False)
         self.assertEqual(len(called), 1)
+    
+    
+    def test_help(self):
+        """
+        Help should spit out the first line of all doc strings of all commands
+        """
+        class Fake:
+            def __init__(self, doc):
+                self.__doc__ = doc
+        s = ShellProtocol()
+        
+        foo = Fake('''
+        this is something here.
+        
+        and not here
+        ''')
+        bar = Fake('''
+        bar is this guy''')
+        
+        s.getCommands = lambda: {'foo': foo, 'bar': bar}
+        
+        called = []
+        s.sendLine = called.append
+        
+        s.cmd_help()
+        
+        r = '\n'.join(called)
+        
+        self.assertTrue('this is something here.' in r)
+        self.assertTrue('and not here' not in r, 'Only the first line should be included')
+        
+        self.assertTrue('bar is this guy' in r)
+    
+    
+    def test_help_one(self):
+        """
+        Help should display help specific to a command.
+        """
+        s = ShellProtocol()
+        called = []
+        s.sendLine = called.append
+        
+        s.cmd_help('help')
+        
+        r = '\n'.join(called)
+        
+        self.assertTrue('usage: help [command]' in r)
+        self.assertTrue('You can get specific help' in r)
+    
+    
+    def test_help_nocommand(self):
+        """
+        Help should tell them if the command doesn't exist
+        """
+        s = ShellProtocol()
+        called = []
+        s.sendLine = called.append
+        
+        s.cmd_help('foobar')
+        
+        self.assertTrue('foobar' in called[0])
+        
 
 
 
