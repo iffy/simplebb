@@ -28,6 +28,17 @@ class BuildTest(TestCase):
         self.assertEqual(b.status, None)
     
     
+    def test_getTag(self):
+        b = Build()
+        self.assertEqual(b.getTag(), dict(project=None, version=None, test=None))
+        b.project = 'foo'
+        self.assertEqual(b.getTag()['project'], 'foo')
+        b.version = 'version'
+        self.assertEqual(b.getTag()['version'], 'version')
+        b.test = 'some test'
+        self.assertEqual(b.getTag()['test'], 'some test')
+    
+    
     def test_finish_0(self):
         """
         Finishing a build with 0 means the build succeeded.

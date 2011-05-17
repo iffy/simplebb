@@ -32,6 +32,9 @@ class Build:
     """
     
     status = None
+    project = None
+    version = None
+    test = None
     
     def __init__(self):
         self.done = defer.Deferred()
@@ -53,6 +56,17 @@ class Build:
         Start this Build (whatever that means) with the given version
         """
         raise NotImplementedError("You must override this method")
+    
+    
+    def getTag(self):
+        """
+        Return identifying dictionary for this build
+        """
+        return {
+            'project': self.project,
+            'version': self.version,
+            'test': self.test,
+        }
 
 
 
@@ -139,7 +153,11 @@ class ProjectRepo:
     
     def notifyBuilt(self, func):
         """
-        Register a function to be called whenever a build finishes
+        Register a function to be called whenever a build finishes.
+        
+        Function should accept these args:
+        
+            tag, status
         """
         self._notifyBuiltFuncs.append(func)
 
