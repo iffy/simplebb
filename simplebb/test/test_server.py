@@ -46,6 +46,34 @@ class RequestManagerTest(TestCase):
         r.buildProject('project', 'version', 'test')
         self.assertEqual(len(called), 1)
         self.assertEqual(called[0], ('project', 'version', 'test'))
+    
+    
+    def test_addBuilder(self):
+        """
+        Just adds it to the builders list
+        """
+        r = RequestManager()
+        o = object()
+        r.addBuilder(o)
+        self.assertTrue(o in r.builders)
+        self.assertEqual(len(r.builders), 1)
+        r.addBuilder(o)
+        self.assertEqual(len(r.builders), 1,
+            "Should not add builders more than once")
+    
+    
+    def test_removeBuilder(self):
+        """
+        Removes a builder from the list
+        """
+        r = RequestManager()
+        o = object()
+        r.addBuilder(o)
+        self.assertTrue(o in r.builders)
+        r.removeBuilder(o)
+        self.assertFalse(o in r.builders)
+        r.removeBuilder(o)
+        self.assertFalse(o in r.builders)
 
 
 
