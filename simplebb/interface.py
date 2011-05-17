@@ -73,17 +73,18 @@ class IBuilder(Interface):
     uid = Attribute('''
         str: unique identifier for this Builder
         ''')
+    
+    
+    builds = Attribute('''
+        list[IBuild]: builds I know about that have not finished.
+        ''')
 
 
     def requestBuild(version, project, test_path=None):
         """
         Request that I build the given project for the given version.
-        """
-
-    
-    def listBuilds():
-        """
-        Returns a Deferred that fires with the list of known Builds.
+        
+        Returns a Deferred that fires with a list of Builds.
         """
 
 

@@ -1,198 +1,53 @@
 from twisted.trial.unittest import TestCase
-from twisted.python.filepath import FilePath
-from twisted.internet import defer
 from zope.interface.verify import verifyClass
+from twisted.python.filepath import FilePath
 
-
-from simplebb.interface import IBuild
-from simplebb.builder import Build, FileBuild, FILE_NOT_FOUND, MISSING_VERSION
-
-
-
-class BuildTest(TestCase):
-
-
-    timeout = 1
-    
-    def test_IBuild(self):
-        verifyClass(IBuild, Build)
-    
-    
-    def test_doneDeferred(self):
-        """
-        A Build should have a done Deferred.
-        """
-        b = Build()
-        self.assertTrue(isinstance(b.done, defer.Deferred))
-    
-    
-    def test_attrs(self):
-        """
-        A Build should have the following attributes.
-        """
-        b = Build()
-        self.assertEqual(b.uid, None)
-        self.assertEqual(b.status, None)
-        self.assertEqual(b.version, None)
-        self.assertEqual(b.project, None)
-        self.assertEqual(b.test_path, None)
-        self.assertEqual(b.builder, None)
-        self.assertEqual(b.runtime, None)
-    
-    
-    def test_finish_0(self):
-        """
-        Finishing a build with 0 means the build succeeded.
-        """
-        b = Build()
-        
-        def cb_done(res):
-            self.assertEqual(res, b)
-        b.done.addCallback(cb_done)
-        
-        b._finish(0)
-        self.assertEqual(b.status, 0)
-        
-        return b.done
-    
-    
-    def test_finish_1(self):
-        """
-        Finishing a build with non-zero means the build failed.
-        """
-        b = Build()
-        
-        def cb_done(res):
-            self.assertEqual(res, b)
-        b.done.addCallback(cb_done)
-        
-        b._finish(1)
-        self.assertEqual(b.status, 1)
-        
-        return b.done
-    
-    
-    def test_run(self):
-        """
-        Build.run finished immediately by default
-        """
-        b = Build()
-
-        def cb(res):
-            self.assertEqual(res, b)
-            self.assertEqual(b.status, None)
-        b.done.addCallback(cb)
-        
-        b.run()
-        return b.done        
+from simplebb.interface import IBuilder
+from simplebb.builder import FileSystemBuilder
 
 
 
-class FileBuildTest(TestCase):
+class FileSystemBuilderTest(TestCase):
     
     
-    timeout = 0.5
+    def test_IBuilder(self):
+        verifyClass(IBuilder, FileSystemBuilder)
     
     
-    def test_IBuild(self):
-        verifyClass(IBuild, FileBuild)
+    def test_init(self):
+        """
+        Should have a base path.
+        """
+        f = FileSystemBuilder()
+        self.assertEqual(f.path, None)
 
+
+    def test_init_str(self):
+        """
+        Initializing with a string signifies a path
+        """
+        f = FileSystemBuilder('foo')
+        self.assertEqual(f.path, FilePath('foo'))
     
-    def test_initPath(self):
-        """
-        Initializing with a string path will set the _filepath attribute
-        """
-        b = FileBuild('foo')
-        self.assertEqual(b._filepath, FilePath('foo'))
     
-    
-    def test_initFilePath(self):
+    def test_init_FilePath(self):
         """
-        Init should handle a FilePath
+        Init with a FilePath is passed straight through
         """
-        p = FilePath('foo')
-        b = FileBuild(p)
-        self.assertEqual(b._filepath, p)
-        
-    
-    def test_run(self):
+        f = FilePath('bar')
+        b = FileSystemBuilder(f)
+        self.assertEqual(b.path, f)
+
+
+    def test_findBuilds_singleFile(self):
         """
-        Running should execute the given file.        
+        if a project is a single file, return a Build for that project.
         """
         f = FilePath(self.mktemp())
-        f.setContent('#!/bin/bash\nexit 12')
+        b = FileSystemBuilder(f)
         
-        b = FileBuild(f)
-        b.version = 'foo'
-        
-        def cb(build):
-            self.assertEqual(build, b)
-            self.assertEqual(build.status, 12)
-        b.done.addCallback(cb)
-        
-        b.run()
-        return b.done
-    
-    
-    def test_run_noVersion(self):
+
+    def test_requestBuild(self):
         """
-        If no version is supplied, the build will fail with MISSING_VERSION
+        requesting a build
         """
-        f = FilePath(self.mktemp())
-        f.setContent('#!/bin/bash\nexit 11')
-        
-        b = FileBuild(f)
-        
-        def cb(build):
-            self.assertEqual(build, b)
-            self.assertEqual(build.status, MISSING_VERSION)
-        b.done.addCallback(cb)
-        
-        b.run()
-        return b.done
-    
-    
-    def test_run_noFile(self):
-        """
-        If a file does not exit, fail with FILE_NOT_FOUND
-        """
-        b = FileBuild('hey')
-        b.version = 'foo'
-        
-        def cb(build):
-            self.assertEqual(build, b)
-            self.assertEqual(build.status, FILE_NOT_FOUND)
-        b.done.addCallback(cb)
-        
-        b.run()
-        return b.done
-    
-    
-    def test_version_passed(self):
-        """
-        The version should be passed to the underlying script
-        """
-        f = FilePath(self.mktemp())
-        f.setContent('#!/bin/bash\nexit $1')
-        
-        b = FileBuild(f)
-        b.version = '22'
-        
-        def cb(build):
-            self.assertEqual(build, b)
-            self.assertEqual(build.status, 22)
-        b.done.addCallback(cb)
-        
-        b.run()
-        return b.done
-        
-        
-        
-
-
-
-
-
-
-
-
