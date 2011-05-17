@@ -14,7 +14,7 @@ class RequestManagerTest(TestCase):
         It should have these attributes.
         """
         r = RequestManager()
-        self.assertEqual(r.projectRepo, None)
+        self.assertEqual(r.builders, [])
 
     
     def test_initWithRepo(self):
@@ -23,5 +23,29 @@ class RequestManagerTest(TestCase):
         """
         f = FilePath(self.mktemp())
         r = RequestManager(project_root=f.path)
-        self.assertTrue(isinstance(r.projectRepo, ProjectRepo))
-        self.assertEqual(r.projectRepo.path, f)
+        self.assertEqual(len(r.builders), 1)
+        
+        pr = r.builders[0]
+        self.assertTrue(isinstance(pr, ProjectRepo))
+        self.assertEqual(pr.path, f)
+    
+    
+    def test_buildProject(self):
+        """
+        buildProject should tell the projectRepo to build
+        """
+        pr = ProjectRepo()
+        called = []
+        def f(project, version, test):
+            called.append((project, version, test))
+        pr.buildProject = f
+        
+        r = RequestManager()
+        r.builders = [pr]
+        
+        r.buildProject('project', 'version', 'test')
+        self.assertEqual(len(called), 1)
+        self.assertEqual(called[0], ('project', 'version', 'test'))
+
+
+
