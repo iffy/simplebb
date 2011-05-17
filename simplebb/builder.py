@@ -7,7 +7,8 @@ from simplebb.interface import IBuild
 
 
 
-class FileNotFoundError(Exception): pass
+FILE_NOT_FOUND = 404
+MISSING_VERSION = 400
 
 
 
@@ -49,5 +50,29 @@ class Build:
         self._finish(self.status)
 
 
+
+class FileBuild(Build):
+    """
+    I am a build of a single file.
+    """
+    
+    def __init__(self, path):
+        Build.__init__(self)
+        if isinstance(path, FilePath):
+            self._filepath = path
+        else:
+            self._filepath = FilePath(path)
+
+    
+    def run(self):
+        """
+        Executes _filepath and eventually calls _finish.
+        """
+        if not self.version:
+            return self._finish(MISSING_VERSION)
+        if not self._filepath.exists():
+            return self._finish(FILE_NOT_FOUND)
+        d = utils.getProcessValue(self._filepath.path, args=(self.version,))
+        d.addCallback(self._finish)
 
 

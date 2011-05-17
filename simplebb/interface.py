@@ -75,7 +75,7 @@ class IBuilder(Interface):
         ''')
 
 
-    def requestBuild(version, name):
+    def requestBuild(version, project, test_path=None):
         """
         Request that I build the given project for the given version.
         """

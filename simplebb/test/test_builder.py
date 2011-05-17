@@ -5,7 +5,7 @@ from zope.interface.verify import verifyClass
 
 
 from simplebb.interface import IBuild
-from simplebb.builder import Build
+from simplebb.builder import Build, FileBuild, FILE_NOT_FOUND, MISSING_VERSION
 
 
 
@@ -85,10 +85,94 @@ class BuildTest(TestCase):
         
         b.run()
         return b.done        
+
+
+
+class FileBuildTest(TestCase):
+    
+    
+    timeout = 0.5
+    
+    
+    def test_IBuild(self):
+        verifyClass(IBuild, FileBuild)
+
+    
+    def test_initPath(self):
+        """
+        Initializing with a string path will set the _filepath attribute
+        """
+        b = FileBuild('foo')
+        self.assertEqual(b._filepath, FilePath('foo'))
+    
+    
+    def test_initFilePath(self):
+        """
+        Init should handle a FilePath
+        """
+        p = FilePath('foo')
+        b = FileBuild(p)
+        self.assertEqual(b._filepath, p)
+        
+    
+    def test_run(self):
+        """
+        Running should execute the given file.        
+        """
+        f = FilePath(self.mktemp())
+        f.setContent('#!/bin/bash\nexit 12')
+        
+        b = FileBuild(f)
+        b.version = 'foo'
+        
+        def cb(build):
+            self.assertEqual(build, b)
+            self.assertEqual(build.status, 12)
+        b.done.addCallback(cb)
+        
+        b.run()
+        return b.done
+    
+    
+    def test_run_noVersion(self):
+        """
+        If no version is supplied, the build will fail with MISSING_VERSION
+        """
+        f = FilePath(self.mktemp())
+        f.setContent('#!/bin/bash\nexit 11')
+        
+        b = FileBuild(f)
+        
+        def cb(build):
+            self.assertEqual(build, b)
+            self.assertEqual(build.status, MISSING_VERSION)
+        b.done.addCallback(cb)
+        
+        b.run()
+        return b.done
+    
+    
+    def test_run_noFile(self):
+        """
+        If a file does not exit, fail with FILE_NOT_FOUND
+        """
+        b = FileBuild('hey')
+        b.version = 'foo'
+        
+        def cb(build):
+            self.assertEqual(build, b)
+            self.assertEqual(build.status, FILE_NOT_FOUND)
+        b.done.addCallback(cb)
+        
+        b.run()
+        return b.done
         
         
         
-        
+
+
+
+
 
 
 
