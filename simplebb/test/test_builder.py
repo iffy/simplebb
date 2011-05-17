@@ -166,6 +166,25 @@ class FileBuildTest(TestCase):
         
         b.run()
         return b.done
+    
+    
+    def test_version_passed(self):
+        """
+        The version should be passed to the underlying script
+        """
+        f = FilePath(self.mktemp())
+        f.setContent('#!/bin/bash\nexit $1')
+        
+        b = FileBuild(f)
+        b.version = '22'
+        
+        def cb(build):
+            self.assertEqual(build, b)
+            self.assertEqual(build.status, 22)
+        b.done.addCallback(cb)
+        
+        b.run()
+        return b.done
         
         
         
