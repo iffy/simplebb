@@ -1,8 +1,27 @@
 from twisted.internet import defer, utils
 from twisted.python.filepath import FilePath
+from zope.interface import Interface, implements
 
 
 class FileNotFoundError(Exception): pass
+
+
+
+class IBuilder(Interface):
+    """
+    Things that implement me allow you to build projects.
+    """
+    
+    def buildProject(project, version, test=None):
+        """
+        Starts a project building.
+        """
+    
+    
+    def notifyBuilt(func):
+        """
+        Register a function to be called whenever a project is finished building.
+        """
 
 
 
@@ -66,11 +85,14 @@ class ProjectRepo:
     I wrap the directory where project build steps are stored.  You can ask me to build projects.
     """
     
+    implements(IBuilder)
+    
     def __init__(self, path=None):
         if isinstance(path, FilePath) or path is None:
             self.path = path
         else:
             self.path = FilePath(path)
+        self._notifyBuiltFuncs = []
     
     
     def getBuilds(self, project, test=None):
@@ -106,10 +128,20 @@ class ProjectRepo:
     
     def buildProject(self, project, version, test=None):
         """
-        build a project of a given version
+        Builds a project of a given version.
+        
+        Returns a list of Deferreds that will fire with Build objects on completion
+        of the tests.
         """
         builds = self.getBuilds(project, test)
-        return self.runBuilds(builds, version)
+        self.runBuilds(builds, version)
+    
+    
+    def notifyBuilt(self, func):
+        """
+        Register a function to be called whenever a build finishes
+        """
+        self._notifyBuiltFuncs.append(func)
 
 
 

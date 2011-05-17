@@ -1,9 +1,10 @@
 from twisted.trial.unittest import TestCase
 from twisted.python.filepath import FilePath
 from twisted.internet import defer
+from zope.interface.verify import verifyClass
 
 
-from simplebb.builder import ProjectRepo, FileBuild, Build
+from simplebb.builder import ProjectRepo, FileBuild, Build, IBuilder
 from simplebb.builder import FileNotFoundError
 
 
@@ -150,6 +151,10 @@ class FileBuildTest(TestCase):
 class ProjectRepoTest(TestCase):
 
     
+    def test_implements(self):
+        verifyClass(IBuilder, ProjectRepo)
+
+    
     def test_path(self):
         """
         Can be initialized with a string filename
@@ -266,7 +271,7 @@ class ProjectRepoTest(TestCase):
 
     def test_buildProject(self):
         """
-        Should call getBuilds and runBuilds and return the result of runBuilds
+        Should call getBuilds and runBuilds.
         """
         pr = ProjectRepo()
         
@@ -281,11 +286,23 @@ class ProjectRepoTest(TestCase):
             return 'run result'
         pr.runBuilds = runBuilds
 
-        r = pr.buildProject('foo', 'version 1', 'test 1')
+        pr.buildProject('foo', 'version 1', 'test 1')
         
         self.assertEqual(called[0], ('foo', 'test 1'))
         self.assertEqual(called[1], ('get result', 'version 1'))
-        self.assertEqual(r, 'run result')
+    
+    
+    def test_notifyBuilt(self):
+        """
+        notifyBuilt should save a function for calling after something is built
+        """
+        pr = ProjectRepo()
+        self.assertEqual(pr._notifyBuiltFuncs, [])
+        
+        def f(status):
+            pass
+        pr.notifyBuilt(f)
+        self.assertEqual(pr._notifyBuiltFuncs, [f])
         
 
 
