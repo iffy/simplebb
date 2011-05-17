@@ -4,3 +4,5 @@ builder.log
 *.log
 *.pid
 *_trial_temp
+.coverage
+htmlcov

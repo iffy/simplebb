@@ -103,6 +103,7 @@ class ShellProtocolTest(TestCase):
         runCmd should find the command from arg[0] and run it with args[1:]*
         """
         s = ShellProtocol()
+        s.showPrompt = lambda: None
         
         called = []
         def fake(*args):
@@ -122,6 +123,7 @@ class ShellProtocolTest(TestCase):
         if there's no such command, tell the person so
         """
         s = ShellProtocol()
+        s.showPrompt = lambda: None
         called = []
         s.sendLine = called.append
         
@@ -136,6 +138,7 @@ class ShellProtocolTest(TestCase):
         If the user supplies bad arguments
         """
         s = ShellProtocol()
+        s.showPrompt = lambda: None
         called = []
         s.sendLine = called.append
         
@@ -154,6 +157,7 @@ class ShellProtocolTest(TestCase):
         If there's any other kind of error
         """
         s = ShellProtocol()
+        s.showPrompt = lambda: None
         called = []
         s.sendLine = called.append
         
@@ -225,7 +229,47 @@ class ShellProtocolTest(TestCase):
         s.cmd_help('foobar')
         
         self.assertTrue('foobar' in called[0])
+    
+    
+    def test_lineReceived(self):
+        """
+        lineReceived should parse the args and call runCmd
+        """
+        s = ShellProtocol()
+        called = []
+        def parseCmd(s):
+            called.append(('parse', s))
+            return ['parsed', 'arg']
+        def runCmd(cmd, *args):
+            called.append(('run', cmd, args))
         
+        s.parseCmd = parseCmd
+        s.runCmd = runCmd
+        
+        s.lineReceived('how are you')
+        
+        self.assertEqual(len(called), 2)
+        self.assertEqual(called[0], ('parse', 'how are you'))
+        self.assertEqual(called[1], ('run', 'parsed', ('arg',)))
+    
+    
+    def test_cmd_quit(self):
+        """
+        Should be able to quit
+        """
+        called = []
+        
+        class FakeTransport:
+            def loseConnection(self):
+                called.append(True)
+        
+        s = ShellProtocol()
+        s.transport = FakeTransport()
+        
+        s.cmd_quit()
+        self.assertEqual(called, [True])
+
+
 
 
 

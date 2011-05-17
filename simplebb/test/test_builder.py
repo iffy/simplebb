@@ -79,7 +79,8 @@ class BuildTest(TestCase):
 
         def cb(res):
             self.assertEqual(res, b)
-        
+
+        b.done.addCallback(cb)
         b.run('version')
         self.assertEqual(b.status, None)
         self.assertEqual(b.version, 'version')
