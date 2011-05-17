@@ -21,6 +21,8 @@ class IBuilder(Interface):
     def notifyBuilt(func):
         """
         Register a function to be called whenever a project is finished building.
+        
+        It should accept an identifying tag and a status
         """
 
 
@@ -55,7 +57,9 @@ class Build:
         """
         Start this Build (whatever that means) with the given version
         """
-        raise NotImplementedError("You must override this method")
+        self.status = 0
+        self.version = version
+        self.done.callback(self)
     
     
     def getTag(self):

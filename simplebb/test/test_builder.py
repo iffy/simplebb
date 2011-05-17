@@ -78,7 +78,14 @@ class BuildTest(TestCase):
         Build.run is meant to be overwritten
         """
         b = Build()
-        self.assertRaises(NotImplementedError, b.run, 'version 1')
+
+        def cb(res):
+            self.assertEqual(res, b)
+        
+        b.run('version')
+        self.assertEqual(b.status, 0)
+        self.assertEqual(b.version, 'version')
+        return b.done
 
 
 
@@ -266,15 +273,10 @@ class ProjectRepoTest(TestCase):
     def test_runBuilds(self):
         """
         should run each of the builds
-        """
-        class FakeBuild(Build):
-            def run(self, version):
-                self.version = version
-                self.done.callback(self)
-                
+        """                
         pr = ProjectRepo()
         
-        builds = [FakeBuild(), FakeBuild()]
+        builds = [Build(), Build()]
         ret = pr.runBuilds(builds, 'foo')
         
         self.assertTrue(builds[0].done.called)
