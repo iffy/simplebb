@@ -115,6 +115,55 @@ class ShellProtocolTest(TestCase):
         self.assertEqual(r, 'hey')
         self.assertEqual(len(called), 1)
         self.assertEqual(called[0], ('arg1', 'arg2', 'arg3'))
+    
+    
+    def test_runCmd_noCmd(self):
+        """
+        if there's no such command, tell the person so
+        """
+        s = ShellProtocol()
+        called = []
+        s.sendLine = called.append
+        
+        r = s.runCmd(*['foo', 'bar'])
+        self.assertEqual(r, False)
+        self.assertEqual(len(called), 1)
+        self.assertTrue('foo' in called[0])
+    
+    
+    def test_runCmd_badArgs(self):
+        """
+        If the user supplies bad arguments
+        """
+        s = ShellProtocol()
+        called = []
+        s.sendLine = called.append
+        
+        def fake(arg1, arg2):
+            pass
+        
+        s.cmd_foo = fake
+        
+        r = s.runCmd(*['foo', 'arg1'])
+        self.assertEqual(r, False)
+        self.assertEqual(len(called), 1)
+    
+    
+    def test_runCmd_error(self):
+        """
+        If there's any other kind of error
+        """
+        s = ShellProtocol()
+        called = []
+        s.sendLine = called.append
+        
+        def fake(arg1):
+            raise Exception('foo')
+        s.cmd_foo = fake
+        
+        r = s.runCmd(*['foo', 'arg1'])
+        self.assertEqual(r, False)
+        self.assertEqual(len(called), 1)
 
 
 

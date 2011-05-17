@@ -46,7 +46,17 @@ class ShellProtocol(LineReceiver):
         Run the given command with the given args
         """
         c = self.getCommands()
-        return c[cmd](*args)
+        try:
+            return c[cmd](*args)
+        except KeyError, e:
+            self.sendLine('No command named %s.  Type help' % cmd)
+            return False
+        except TypeError, e:
+            self.sendLine('Error trying to run command.  Type help %s' % cmd)
+            return False
+        except Exception, e:
+            self.sendLine('Error while running command.  Type help %s' % cmd)
+            return False
     
     
     def cmd_build(self, project, version, test=None):
