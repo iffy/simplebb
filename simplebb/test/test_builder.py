@@ -99,6 +99,7 @@ class FileBuildTest(TestCase):
         f = self.mktemp()
         fb = FileBuild(f)
         self.assertEqual(fb.path, FilePath(f))
+        self.assertEqual(fb.test, None)
     
     
     def test_initFilePath(self):
@@ -108,7 +109,7 @@ class FileBuildTest(TestCase):
         f = FilePath(self.mktemp())
         fb = FileBuild(f)
         self.assertEqual(fb.path, f)
-    
+
     
     def test_run(self):
         """
@@ -124,7 +125,7 @@ class FileBuildTest(TestCase):
         fb.done.addCallback(cb)
         
         fb.run('0')
-        
+        self.assertEqual(fb.version, '0')
         return fb.done
 
 
@@ -199,6 +200,10 @@ class ProjectRepoTest(TestCase):
         
         self.assertEqual(len(r), 1)
         self.assertEqual(r[0].path, foo)
+        self.assertEqual(r[0].project, 'foo',
+            "ProjectRepo should set the project attr of the Build")
+        self.assertEqual(r[0].test, None)
+        self.assertEqual(r[0].version, None)
     
     
     def test_getBuilds_file_withTest(self):
@@ -234,6 +239,7 @@ class ProjectRepoTest(TestCase):
         
         self.assertEqual(len(r), 2)
         self.assertEqual(set([x.path for x in r]), set([test1, test2]))
+        self.assertEqual(set([x.project for x in r]), set(['foo']))
     
     
     def test_getBuilds_dir_withTest(self):
@@ -253,6 +259,8 @@ class ProjectRepoTest(TestCase):
         
         self.assertEqual(len(r), 1)
         self.assertEqual(r[0].path, test1)
+        self.assertEqual(r[0].project, 'foo')
+        self.assertEqual(r[0].test, 'test1')
 
 
     def test_runBuilds(self):
@@ -260,7 +268,6 @@ class ProjectRepoTest(TestCase):
         should run each of the builds
         """
         class FakeBuild(Build):
-            version = None
             def run(self, version):
                 self.version = version
                 self.done.callback(self)

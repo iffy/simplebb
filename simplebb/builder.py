@@ -89,6 +89,7 @@ class FileBuild(Build):
         """
         if not self.path.exists():
             raise FileNotFoundError('File not found')
+        self.version = version
         d = utils.getProcessValue(self.path.path, args=(version,))
         d.addCallback(self.finish)
 
@@ -121,12 +122,18 @@ class ProjectRepo:
         if project_path.isfile():
             # file
             if test is None:
-                yield FileBuild(project_path)
+                fb = FileBuild(project_path)
+                fb.project = project
+                yield fb
         else:
             # directory
             glob_pattern = test or '*'
             for child in project_path.globChildren(glob_pattern):
-                yield FileBuild(child)
+                fb = FileBuild(child)
+                fb.project = project
+                if test is not None:
+                    fb.test = fb.path.basename()
+                yield fb
     
     
     def runBuilds(self, builds, version):
