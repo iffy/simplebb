@@ -4,8 +4,8 @@ from twisted.internet import defer
 from zope.interface.verify import verifyClass
 
 
-from simplebb.builder import ProjectRepo, FileBuild, Build, IBuilder
-from simplebb.builder import FileNotFoundError
+from simplebb.interface import IBuild
+from simplebb.builder import Build
 
 
 
@@ -13,6 +13,9 @@ class BuildTest(TestCase):
 
 
     timeout = 1
+    
+    def test_IBuild(self):
+        verifyClass(IBuild, Build)
     
     
     def test_doneDeferred(self):
@@ -23,20 +26,18 @@ class BuildTest(TestCase):
         self.assertTrue(isinstance(b.done, defer.Deferred))
     
     
-    def test_status(self):
+    def test_attrs(self):
+        """
+        A Build should have the following attributes.
+        """
         b = Build()
+        self.assertEqual(b.uid, None)
         self.assertEqual(b.status, None)
-    
-    
-    def test_getTag(self):
-        b = Build()
-        self.assertEqual(b.getTag(), dict(project=None, version=None, test=None))
-        b.project = 'foo'
-        self.assertEqual(b.getTag()['project'], 'foo')
-        b.version = 'version'
-        self.assertEqual(b.getTag()['version'], 'version')
-        b.test = 'some test'
-        self.assertEqual(b.getTag()['test'], 'some test')
+        self.assertEqual(b.version, None)
+        self.assertEqual(b.project, None)
+        self.assertEqual(b.test_path, None)
+        self.assertEqual(b.builder, None)
+        self.assertEqual(b.runtime, None)
     
     
     def test_finish_0(self):
@@ -49,7 +50,7 @@ class BuildTest(TestCase):
             self.assertEqual(res, b)
         b.done.addCallback(cb_done)
         
-        b.finish(0)
+        b._finish(0)
         self.assertEqual(b.status, 0)
         
         return b.done
@@ -65,7 +66,7 @@ class BuildTest(TestCase):
             self.assertEqual(res, b)
         b.done.addCallback(cb_done)
         
-        b.finish(1)
+        b._finish(1)
         self.assertEqual(b.status, 1)
         
         return b.done
@@ -73,268 +74,17 @@ class BuildTest(TestCase):
     
     def test_run(self):
         """
-        Build.run is meant to be overwritten
+        Build.run finished immediately by default
         """
         b = Build()
 
         def cb(res):
             self.assertEqual(res, b)
-
+            self.assertEqual(b.status, None)
         b.done.addCallback(cb)
-        b.run('version')
-        self.assertEqual(b.status, None)
-        self.assertEqual(b.version, 'version')
-        return b.done
-
-
-
-class FileBuildTest(TestCase):
-    
-    timeout = 3
-    
-    
-    def test_subClass(self):
-        self.assertTrue(issubclass(FileBuild, Build),
-            "FileBuild should subclass Build")
-
-    
-    def test_initFilename(self):
-        """
-        Should save the initialized filename as a FilePath
-        """
-        f = self.mktemp()
-        fb = FileBuild(f)
-        self.assertEqual(fb.path, FilePath(f))
-        self.assertEqual(fb.test, None)
-    
-    
-    def test_initFilePath(self):
-        """
-        Should save a given FilePath as as the path
-        """
-        f = FilePath(self.mktemp())
-        fb = FileBuild(f)
-        self.assertEqual(fb.path, f)
-
-    
-    def test_run(self):
-        """
-        The file should be run with the version as the first arg
-        """
-        f = FilePath(self.mktemp())
-        f.setContent('#!/bin/bash\nexit $1\n')
-        f.chmod(0777)
         
-        fb = FileBuild(f)
-        def cb(res):
-            self.assertEqual(res.status, 0)
-        fb.done.addCallback(cb)
-        
-        fb.run('0')
-        self.assertEqual(fb.version, '0')
-        return fb.done
-
-
-    def test_run_version(self):
-        """
-        The version should be passed as the first arg
-        """
-        f = FilePath(self.mktemp())
-        f.setContent('#!/bin/bash\nexit $1\n')
-        f.chmod(0777)
-        
-        fb = FileBuild(f)
-        def cb(res):
-            self.assertEqual(res.status, 1)
-        fb.done.addCallback(cb)
-        
-        fb.run('1')
-        
-        return fb.done
-
-
-    def test_run_dne(self):
-        """
-        A file that does not exist can not be run
-        """
-        f = FilePath(self.mktemp())
-        f.makedirs()
-        fb = FileBuild(f.child('foo'))
-        self.assertRaises(FileNotFoundError, fb.run, 'version')
-
-
-
-class ProjectRepoTest(TestCase):
-
-    
-    def test_implements(self):
-        verifyClass(IBuilder, ProjectRepo)
-
-    
-    def test_path(self):
-        """
-        Can be initialized with a string filename
-        """
-        f = FilePath(self.mktemp())
-        pr = ProjectRepo(f.path)
-        self.assertEqual(pr.path, f)
-    
-    
-    def test_path_filepath(self):
-        """
-        Can be initialized with a FilePath
-        """
-        f = FilePath(self.mktemp())
-        pr = ProjectRepo(f)
-        self.assertEqual(pr.path, f)
-    
-    
-    def test_getBuilds_file(self):
-        """
-        If the object in the directory that corresponds to a requested
-        project is a file, return a FileBuild for that file.
-        """
-        f = FilePath(self.mktemp())
-        f.makedirs()
-        foo = f.child('foo')
-        foo.setContent('something')
-        
-        pr = ProjectRepo(f)
-        r = list(pr.getBuilds('foo'))
-        
-        self.assertEqual(len(r), 1)
-        self.assertEqual(r[0].path, foo)
-        self.assertEqual(r[0].project, 'foo',
-            "ProjectRepo should set the project attr of the Build")
-        self.assertEqual(r[0].test, None)
-        self.assertEqual(r[0].version, None)
-    
-    
-    def test_getBuilds_file_withTest(self):
-        """
-        If the object in the directory that corresponds to a requested
-        project is a file, and a specific test is also request, return nothing.
-        """
-        f = FilePath(self.mktemp())
-        f.makedirs()
-        foo = f.child('foo')
-        foo.setContent('something')
-        
-        pr = ProjectRepo(f)
-        r = list(pr.getBuilds('foo', 'test1'))
-        
-        self.assertEqual(len(r), 0)
-    
-    
-    def test_getBuilds_dir(self):
-        """
-        If the project has a directory full of tests, return all of them
-        """
-        root = FilePath(self.mktemp())
-        foo = root.child('foo')
-        foo.makedirs()
-        test1 = foo.child('test1')
-        test1.setContent('content of test1')
-        test2 = foo.child('test2')
-        test2.setContent('content of test2')
-                
-        pr = ProjectRepo(root)
-        r = list(pr.getBuilds('foo'))
-        
-        self.assertEqual(len(r), 2)
-        self.assertEqual(set([x.path for x in r]), set([test1, test2]))
-        self.assertEqual(set([x.project for x in r]), set(['foo']))
-    
-    
-    def test_getBuilds_dir_withTest(self):
-        """
-        If the project has a directory, a single test may be chosen.
-        """
-        root = FilePath(self.mktemp())
-        foo = root.child('foo')
-        foo.makedirs()
-        test1 = foo.child('test1')
-        test1.setContent('content of test1')
-        test2 = foo.child('test2')
-        test2.setContent('content of test2')
-                
-        pr = ProjectRepo(root)
-        r = list(pr.getBuilds('foo', 'test1'))
-        
-        self.assertEqual(len(r), 1)
-        self.assertEqual(r[0].path, test1)
-        self.assertEqual(r[0].project, 'foo')
-        self.assertEqual(r[0].test, 'test1')
-
-
-    def test_runBuilds(self):
-        """
-        should run each of the builds
-        """                
-        pr = ProjectRepo()
-        
-        builds = [Build(), Build()]
-        ret = pr.runBuilds(builds, 'foo')
-        
-        self.assertTrue(builds[0].done.called)
-        self.assertEqual(builds[0].version, 'foo')
-        
-        self.assertTrue(builds[1].done.called)
-        self.assertEqual(builds[1].version, 'foo')
-        
-        self.assertEqual(len(ret), 2, "The Build.done Deferreds should have been returned")
-        self.assertEqual(set(ret), set([x.done for x in builds]))
-
-
-    def test_buildProject(self):
-        """
-        Should call getBuilds and runBuilds.
-        """
-        pr = ProjectRepo()
-        
-        called = []
-        def getBuilds(project, test=None):
-            called.append((project, test))
-            return 'get result'
-        pr.getBuilds = getBuilds
-        
-        def runBuilds(builds, version):
-            called.append((builds, version))
-            return 'run result'
-        pr.runBuilds = runBuilds
-
-        pr.buildProject('foo', 'version 1', 'test 1')
-        
-        self.assertEqual(called[0], ('foo', 'test 1'))
-        self.assertEqual(called[1], ('get result', 'version 1'))
-    
-    
-    def test_notifyBuilt(self):
-        """
-        When builds are run via runBuilds, they should call all the funcs in notifyBuilt
-        """
-        called = []
-        def f(tag, status):
-            called.append(('F', tag, status))
-        def g(tag, status):
-            called.append(('G', tag, status))
-        
-        pr = ProjectRepo()
-        pr.notifyBuilt(f)
-        pr.notifyBuilt(g)
-        
-        b = Build()
-        b.status = 0
-        b2 = Build()
-        b2.status = 1
-        pr.runBuilds([b, b2], 'version')
-        
-        self.assertEqual(called[0], ('F', b.getTag(), b.status))
-        self.assertEqual(called[1], ('G', b.getTag(), b.status))
-        self.assertEqual(called[2], ('F', b2.getTag(), b2.status))
-        self.assertEqual(called[3], ('G', b2.getTag(), b2.status))
-        
-        
+        b.run()
+        return b.done        
         
         
         

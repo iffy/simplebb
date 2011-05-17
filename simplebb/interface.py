@@ -7,14 +7,14 @@ class IBuild(Interface):
     I am a single Build of a single project of a single version.
     """
 
-    
-    uid = Attribute('''
-        str: unique identifier for this Build
-        ''')
-    
-    
+
     done = Attribute('''
         Deferred that fires with self once the build is done.
+        ''')
+
+
+    uid = Attribute('''
+        str: unique identifier for this Build
         ''')
     
     
