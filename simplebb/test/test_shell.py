@@ -96,6 +96,32 @@ class ShellProtocolTest(TestCase):
         s.cmd_something = f
         c2 = s.getCommands()
         self.assertEqual(c, c2)
+    
+    
+    def test_runCmd(self):
+        """
+        runCmd should find the command from arg[0] and run it with args[1:]*
+        """
+        s = ShellProtocol()
+        
+        called = []
+        def fake(*args):
+            called.append(args)
+            return 'hey'
+        
+        s.cmd_foo = fake
+        
+        r = s.runCmd(*['foo', 'arg1', 'arg2', 'arg3'])
+        self.assertEqual(r, 'hey')
+        self.assertEqual(len(called), 1)
+        self.assertEqual(called[0], ('arg1', 'arg2', 'arg3'))
+
+
+
+
+
+
+
 
 
 

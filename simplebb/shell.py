@@ -41,6 +41,14 @@ class ShellProtocol(LineReceiver):
         return ret
     
     
+    def runCmd(self, cmd, *args):
+        """
+        Run the given command with the given args
+        """
+        c = self.getCommands()
+        return c[cmd](*args)
+    
+    
     def cmd_build(self, project, version, test=None):
         """
         Request a build.
