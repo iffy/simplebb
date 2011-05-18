@@ -38,8 +38,30 @@ class FileSystemBuilderTest(TestCase):
         b = FileSystemBuilder(f)
         self.assertEqual(b.path, f)
 
+    
+    
+class findBuildsTest(TestCase):
 
-    def test_findBuilds_singleFile(self):
+    
+    def setUp(self):
+        f = FilePath(self.mktemp())
+        
+        foo = f.child('foo')
+        test1 = foo.child('test1')
+        test2 = foo.child('test2')
+        bar = foo.child('bar')
+        test3 = bar.child('test3')
+        
+        bar.makedirs()
+        
+        test1.setContent('test1')
+        test2.setContent('test2')
+        test3.setContent('test3')
+        
+        self.b = FileSystemBuilder(f)
+
+
+    def test_singleFile(self):
         """
         if a project is a single file, return a Build for that project.
         """
@@ -57,10 +79,30 @@ class FileSystemBuilderTest(TestCase):
         self.assertEqual(len(r), 1)
         self.assertEqual(r[0].project, 'foo')
         self.assertEqual(r[0].builder, b)
-        
-        
+        self.assertEqual(r[0].test_path, None)
+    
+        # test_path given, more specific than foo
+        r = list(b.findBuilds('foo', 'something'))
+        self.assertEqual(len(r), 0)
 
-    def test_requestBuild(self):
+
+    def test_noTestPath(self):
         """
-        requesting a build
+        If no testpath supplied, return everything under the path
         """
+        r = list(self.b.findBuilds('foo'))
+        self.assertEqual(len(r), 3)
+        self.assertEqual(set([x.project for x in r]), set(['foo']))
+        self.assertEqual(set([x.test_path for x in r]), set(['test1', 'test2', 'bar/test3']))
+
+
+
+
+
+
+
+
+
+
+
+
