@@ -5,7 +5,7 @@ from zope.interface.verify import verifyClass
 
 
 from simplebb.interface import IBuild
-from simplebb.builder import Build, FileBuild, FILE_NOT_FOUND, MISSING_VERSION
+from simplebb.build import Build, FileBuild, FILE_NOT_FOUND, MISSING_VERSION
 
 
 
@@ -74,7 +74,7 @@ class BuildTest(TestCase):
     
     def test_run(self):
         """
-        Build.run finished immediately by default
+        Build.run finishes immediately by default
         """
         b = Build()
 
