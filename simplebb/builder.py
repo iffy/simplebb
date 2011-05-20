@@ -13,10 +13,15 @@ class FileBuilder:
     
     implements(IBuilder)
     
+    name = None
+    
+    uid = None
+    
     path = None
 
     
     def __init__(self, path=None):
+        self.builds = []
         if isinstance(path, FilePath):
             self.path = path
         elif path is not None:

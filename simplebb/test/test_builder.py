@@ -1,5 +1,5 @@
 from twisted.trial.unittest import TestCase
-from zope.interface.verify import verifyClass
+from zope.interface.verify import verifyClass, verifyObject
 from twisted.python.filepath import FilePath
 
 from simplebb.interface import IBuilder
@@ -13,6 +13,7 @@ class FileBuilderTest(TestCase):
     
     def test_IBuilder(self):
         verifyClass(IBuilder, FileBuilder)
+        verifyObject(IBuilder, FileBuilder())
     
     
     def test_init(self):

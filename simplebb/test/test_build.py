@@ -1,7 +1,7 @@
 from twisted.trial.unittest import TestCase
 from twisted.python.filepath import FilePath
 from twisted.internet import defer
-from zope.interface.verify import verifyClass
+from zope.interface.verify import verifyClass, verifyObject
 
 
 from simplebb.interface import IBuild
@@ -16,6 +16,7 @@ class BuildTest(TestCase):
     
     def test_IBuild(self):
         verifyClass(IBuild, Build)
+        verifyObject(IBuild, Build())
     
     
     def test_doneDeferred(self):
@@ -96,6 +97,7 @@ class FileBuildTest(TestCase):
     
     def test_IBuild(self):
         verifyClass(IBuild, FileBuild)
+        verifyObject(IBuild, FileBuild('foo'))
 
     
     def test_initPath(self):
