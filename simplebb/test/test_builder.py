@@ -3,23 +3,23 @@ from zope.interface.verify import verifyClass
 from twisted.python.filepath import FilePath
 
 from simplebb.interface import IBuilder
-from simplebb.builder import FileSystemBuilder
+from simplebb.builder import FileBuilder
 from simplebb.build import FileBuild
 
 
 
-class FileSystemBuilderTest(TestCase):
+class FileBuilderTest(TestCase):
     
     
     def test_IBuilder(self):
-        verifyClass(IBuilder, FileSystemBuilder)
+        verifyClass(IBuilder, FileBuilder)
     
     
     def test_init(self):
         """
         Should have a base path.
         """
-        f = FileSystemBuilder()
+        f = FileBuilder()
         self.assertEqual(f.path, None)
 
 
@@ -27,7 +27,7 @@ class FileSystemBuilderTest(TestCase):
         """
         Initializing with a string signifies a path
         """
-        f = FileSystemBuilder('foo')
+        f = FileBuilder('foo')
         self.assertEqual(f.path, FilePath('foo'))
     
     
@@ -36,7 +36,7 @@ class FileSystemBuilderTest(TestCase):
         Init with a FilePath is passed straight through
         """
         f = FilePath('bar')
-        b = FileSystemBuilder(f)
+        b = FileBuilder(f)
         self.assertEqual(b.path, f)
 
 
@@ -47,7 +47,7 @@ class FileSystemBuilderTest(TestCase):
         """
         root = FilePath(self.mktemp())
         root.makedirs()
-        b = FileSystemBuilder(root)
+        b = FileBuilder(root)
         
         # dne
         r = list(b._findHeads('foo'))
@@ -77,7 +77,7 @@ class FileSystemBuilderTest(TestCase):
         bar.makedirs()
         baz.setContent('baz')
         
-        b = FileSystemBuilder(root)
+        b = FileBuilder(root)
         
         r = list(b._findHeads('foo', '*'))
         self.assertEqual(len(r), 3, "Should find all the heads with *")
@@ -90,71 +90,96 @@ class FileSystemBuilderTest(TestCase):
         # subdirectory
         r = list(b._findHeads('foo', 'bar/baz'))
         self.assertEqual(r, [baz])
-        
-    
-    
-class findBuildsTest(TestCase):
-
-    
-    def setUp(self):
-        f = FilePath(self.mktemp())
-        
-        foo = f.child('foo')
-        test1 = foo.child('test1')
-        test2 = foo.child('test2')
-        bar = foo.child('bar')
-        test3 = bar.child('test3')
-        
-        bar.makedirs()
-        
-        test1.setContent('test1')
-        test2.setContent('test2')
-        test3.setContent('test3')
-        
-        self.b = FileSystemBuilder(f)
 
 
-    def test_singleFile(self):
+    def test_getChildFiles_file(self):
         """
-        if a project is a single file, return a Build for that project.
+        Given a file, return the file
         """
-        f = FilePath(self.mktemp())
-        f.makedirs()
-        b = FileSystemBuilder(f)
+        root = FilePath(self.mktemp())
+        root.setContent('something')
+        b = FileBuilder()
+        r = list(b._getChildFiles(root))
+        self.assertEqual(r, [root])
+
+
+    def test_getChildFiles_dir(self):
+        """
+        Given a directory, return all children files.
+        """
+        root = FilePath(self.mktemp())
+        dir1 = root.child('dir1')
+        dir2 = dir1.child('dir2')
+        dir2.makedirs()
         
-        # no file
-        r = b.findBuilds('foo')
-        self.assertEqual(list(r), [])
+        f1 = root.child('f1')
+        f2 = dir1.child('f2')
+        f3 = dir2.child('f3')
         
-        # file
-        f.child('foo').setContent('something')
-        r = list(b.findBuilds('foo'))
-        self.assertEqual(len(r), 1)
-        self.assertEqual(r[0].project, 'foo')
+        f1.setContent('foo')
+        f2.setContent('foo')
+        f3.setContent('foo')
+        
+        b = FileBuilder()
+        
+        r = b._getChildFiles(root)
+        self.assertEqual(set(r), set([f1, f2, f3]),
+            "Should find all files that are descendants")
+        
+        r = b._getChildFiles(dir1)
+        self.assertEqual(set(r), set([f2, f3]))
+
+
+    def test_findBuilds(self):
+        """
+        It should call a few functions, passing their results around,
+        ending up with FileBuild instances with the correct properties set.
+        """
+        root = FilePath(self.mktemp())
+        project = root.child('project')
+        project.makedirs()
+        
+        foo = project.child('foo')
+        bar = project.child('bar')
+        foo.setContent('foo')
+        bar.setContent('bar')
+        
+        b = FileBuilder(root)
+        
+        class Spy:
+            
+            def __init__(self, func):
+                self.func = func
+                self.called = []
+            
+            def __call__(self, *args):
+                self.called.append(args)
+                return self.func(*args)
+
+
+        b._findHeads = Spy(b._findHeads)
+        b._getChildFiles = Spy(b._getChildFiles)
+        
+        r = list(b.findBuilds('project', '*'))
+        
+        self.assertTrue(b._findHeads.called)
+        self.assertTrue(('project', '*') in b._findHeads.called)
+        
+        self.assertEqual(len(b._getChildFiles.called), 2)
+        
+        self.assertTrue(isinstance(r[0], FileBuild))
+        self.assertEqual(r[0].project, 'project')
+        self.assertEqual(r[0].test_path, 'foo')
         self.assertEqual(r[0].builder, b)
-        self.assertEqual(r[0].test_path, None)
-    
-        # test_path given, more specific than foo
-        r = list(b.findBuilds('foo', 'something'))
-        self.assertEqual(len(r), 0)
-
-
-    def test_noTestPath(self):
-        """
-        If no testpath supplied, return everything under the path
-        """
-        r = list(self.b.findBuilds('foo'))
-        self.assertEqual(len(r), 3)
-        self.assertEqual(set([x.project for x in r]), set(['foo']))
-        self.assertEqual(set([x.test_path for x in r]), set(['test1', 'test2', 'bar/test3']))
-
-
-
-
-
-
-
-
+        self.assertEqual(r[0]._filepath, foo)
+        
+        self.assertTrue(isinstance(r[1], FileBuild))
+        self.assertEqual(r[1].project, 'project')
+        self.assertEqual(r[1].test_path, 'bar')
+        self.assertEqual(r[1].builder, b)
+        self.assertEqual(r[1]._filepath, bar)
+        
+        self.assertEqual(len(r), 2)
 
 
 

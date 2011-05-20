@@ -6,7 +6,7 @@ from simplebb.build import FileBuild
 
 
 
-class FileSystemBuilder:
+class FileBuilder:
     """
     I create and run FileBuilds found from my root directory.
     """
@@ -40,38 +40,46 @@ class FileSystemBuilder:
                     yield child
             else:
                 yield project_fp
+    
+    
+    def _getChildFiles(self, root):
+        """
+        Given the root file/directory, return all the file descendents
+        """
+        if root.isdir():
+            for child in root.walk():
+                if child.isfile():
+                    yield child
+        else:
+            yield root
 
     
     def findBuilds(self, project, test_path=None):
         """
-        Return a list of Builds that match the given criteria
+        Return a list of FileBuilds that match the given criteria
         """
+        project_root = list(self._findHeads(project))
+        if not project_root:
+            return
+        project_prefix = len(project_root[0].path) + 1
         
-        def getFiles(root):
-            if root.isfile():
-                yield root
-            elif root.isdir():
-                for i in root.children():
-                    if i.isfile():
-                        yield i
-                    elif i.isdir():
-                        for x in getFiles(i):
-                            yield x
-        
-        p = self.path.child(project)
-        if p.exists():
-            roots = [p]
-            if test_path:
-                roots = p.globChildren(test_path)
-            for root in roots:
-                for item in getFiles(root):
-                    b = FileBuild(item)
-                    b.project = project
-                    b.builder = self
-                    try:
-                        tp = '/'.join(item.segmentsFrom(p))
-                    except Exception, e:
-                        tp = None
-                    b.test_path = tp
-                    yield b
+        heads = self._findHeads(project, test_path)
+        for head in heads:
+            for child in self._getChildFiles(head):
+                # find test_path
+                b = FileBuild(child)
+                b.project = project
+                b.test_path = child.path[project_prefix:]
+                b.builder = self
+                yield b
+
+
+
+
+
+
+
+
+
+
 
