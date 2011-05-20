@@ -29,6 +29,19 @@ class FileSystemBuilder:
         """
         
     
+    def _findHeads(self, project, test_path=None):
+        """
+        Find the directory roots for a given project and test_path
+        """
+        project_fp = self.path.child(project)
+        if project_fp.exists():
+            if test_path:
+                for child in project_fp.globChildren(test_path):
+                    yield child
+            else:
+                yield project_fp
+
+    
     def findBuilds(self, project, test_path=None):
         """
         Return a list of Builds that match the given criteria

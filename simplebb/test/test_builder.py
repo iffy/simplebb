@@ -4,6 +4,7 @@ from twisted.python.filepath import FilePath
 
 from simplebb.interface import IBuilder
 from simplebb.builder import FileSystemBuilder
+from simplebb.build import FileBuild
 
 
 
@@ -38,6 +39,58 @@ class FileSystemBuilderTest(TestCase):
         b = FileSystemBuilder(f)
         self.assertEqual(b.path, f)
 
+
+    def test_findHeads_project(self):
+        """
+        Find heads with only a project given should find a single FilePath
+        if it exists
+        """
+        root = FilePath(self.mktemp())
+        root.makedirs()
+        b = FileSystemBuilder(root)
+        
+        # dne
+        r = list(b._findHeads('foo'))
+        self.assertEqual(r, [], "Should not find paths that don't exist")
+        
+        # exists
+        root.child('foo').setContent('gobbledegook')
+        r = list(b._findHeads('foo'))
+        self.assertEqual(r, [root.child('foo')])
+    
+    
+    def test_findHeads_testPath(self):
+        """
+        Find heads should find all the heads that match the given testPath
+        """
+        root = FilePath(self.mktemp())
+        
+        foo = root.child('foo')
+        foo.makedirs()
+        test1 = foo.child('test1')
+        test2 = foo.child('test2')
+        bar = foo.child('bar')
+        baz = bar.child('baz')
+        
+        test1.setContent('test1')
+        test2.setContent('test2')
+        bar.makedirs()
+        baz.setContent('baz')
+        
+        b = FileSystemBuilder(root)
+        
+        r = list(b._findHeads('foo', '*'))
+        self.assertEqual(len(r), 3, "Should find all the heads with *")
+        self.assertEqual(set(r), set([test1, test2, bar]))
+        
+        r = list(b._findHeads('foo', 'test*'))
+        self.assertEqual(len(r), 2)
+        self.assertEqual(set(r), set([test1, test2]))
+        
+        # subdirectory
+        r = list(b._findHeads('foo', 'bar/baz'))
+        self.assertEqual(r, [baz])
+        
     
     
 class findBuildsTest(TestCase):
