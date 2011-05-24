@@ -76,10 +76,13 @@ class FileBuilder(ReportableMixin):
         for build in builds:
             build.version = version
             build.run()
+            
+            # notify that the build started
             self.report(build)
-            self.builds.append(build)
-            def f(_, builder, build):
-                builder.builds.remove(build)
+                
+            # notify when the build is done
+            def f(_, self, build):
+                self.report(build)
             build.done.addCallback(f, self, build)
         
     
@@ -127,6 +130,18 @@ class FileBuilder(ReportableMixin):
                 b.builder = self
                 yield b
 
+    
+    def receiveReport(self, build):
+        """
+        Note creation/completion of this build by recording it in self.builds.
+        
+        Register me as a reporter on a Builder if you want to have local info
+        about builds.
+        """
+        if build.done.called:
+            self.builds.remove(build)
+        else:
+            self.builds.append(build)
 
 
 

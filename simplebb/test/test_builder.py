@@ -230,10 +230,29 @@ class FileBuilderTest(TestCase):
         self.assertEqual(len(r), 2)
 
 
+    def test_receiveReport(self):
+        """
+        Builders should be able to receive reports about Builds and add/remove
+        them from their local Build list.
+        """
+        fb = FileBuilder('foo')
+        self.assertEqual(fb.builds, [])
+        b = Build()
+        fb.receiveReport(b)
+        self.assertEqual(fb.builds, [b])
+        
+        # fake completion
+        b.done.callback(fb)
+        self.assertEqual(fb.builds, [b])
+        
+        fb.receiveReport(b)
+        self.assertEqual(fb.builds, [])
+
+
     def test_requestBuild(self):
         """
         requestBuild should pass the results of findBuilds through
-        report() and should add to the builds list.
+        report()
         """
         b = FileBuilder('foo')
         
@@ -261,12 +280,10 @@ class FileBuilderTest(TestCase):
         self.assertEqual(report_called, [r[0]],
             "Build.report should have been called")
         
-        self.assertEqual(b.builds, [r[0]],
-            "Should add the running build to list")
-        
         r[0].done.callback(r[0])
-        self.assertEqual(b.builds, [],
-            "When the build finishes, remove it from the running builds list.")
+        
+        self.assertEqual(report_called, [r[0], r[0]],
+            "When the build finishes, report should be called")
         
 
 
