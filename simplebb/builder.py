@@ -6,7 +6,37 @@ from simplebb.build import FileBuild
 
 
 
-class FileBuilder:
+class ReportableMixin:
+    """
+    Mix me in if you want to have the reporting part of the IBuilder
+    interface.
+    """
+
+
+    def __init__(self):
+        self._reporters = []
+    
+    
+    def addReporter(self, reporter):
+        """
+        Add a reporter so that Build events will be given to the reporter.
+        """
+        if reporter not in self._reporters:
+            self._reporters.append(reporter)
+    
+    
+    def removeReporter(self, reporter):
+        """
+        Removes a reporter so it won't be notified anymore about Build events.
+        """
+        try:
+            self._reporters.remove(reporter)
+        except ValueError:
+            pass
+
+
+
+class FileBuilder(ReportableMixin):
     """
     I create and run FileBuilds found from my root directory.
     """
@@ -21,6 +51,8 @@ class FileBuilder:
 
     
     def __init__(self, path=None):
+        ReportableMixin.__init__(self)
+        
         self.builds = []
         if isinstance(path, FilePath):
             self.path = path

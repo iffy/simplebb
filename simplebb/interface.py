@@ -86,27 +86,20 @@ class IBuilder(Interface):
         
         Returns a Deferred that fires with a list of Builds.
         """
-
-
-
-class IReporter(Interface):
-    """
-    I report the completion of a Build.
     
-    Possible subclasses might include reporters that email,
-    record in a database, send a text, tweet, respond to an AJAX request, etc...
-    """
-
-
-    def monitorBuild(build):
+    
+    def addReporter(reporter):
         """
-        Monitors the Build's done Deferred with buildFinished.
+        Add a reporter to this Builder.
+        
+        Reporters are callables that are called when something interesting happens
+        to a Build.  Right now, interesting events are creation and completion.
         """
-
-
-    def buildFinished(build):
+    
+    
+    def removeReporter(reporter):
         """
-        Called once a Build completes.
+        Remove a reporter from this Builder.
         """
 
 

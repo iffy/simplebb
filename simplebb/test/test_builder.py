@@ -3,8 +3,40 @@ from zope.interface.verify import verifyClass, verifyObject
 from twisted.python.filepath import FilePath
 
 from simplebb.interface import IBuilder
-from simplebb.builder import FileBuilder
+from simplebb.builder import FileBuilder, ReportableMixin
 from simplebb.build import FileBuild
+
+
+class ReportableMixinTest(TestCase):
+    
+    
+    def test_addReporter(self):
+        """
+        Reporters can be added.
+        """
+        b = ReportableMixin()
+        self.assertEqual(b._reporters, [])
+        o = object()
+        b.addReporter(o)
+        self.assertEqual(b._reporters, [o])
+
+        b.addReporter(o)
+        self.assertEqual(b._reporters, [o],
+            "Reports should only be added once")
+    
+    
+    def test_removeReporter(self):
+        """
+        Reports can be removed.
+        """
+        b = ReportableMixin()
+        o = object()
+        b._reporters = [o]
+        b.removeReporter(o)
+        self.assertEqual(b._reporters, [])
+        
+        b.removeReporter(o)
+        self.assertEqual(b._reporters, [])        
 
 
 
@@ -183,5 +215,11 @@ class FileBuilderTest(TestCase):
         self.assertEqual(len(r), 2)
 
 
+    def test_requestBuild(self):
+        """
+        Should implement requestBuild
+        """
+        raise NotImplementedException("Need to write this test")
+    test_requestBuild.todo = 'Need to make it do something'
 
 
