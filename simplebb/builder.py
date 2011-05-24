@@ -72,6 +72,15 @@ class FileBuilder(ReportableMixin):
         """
         Find the build in the file system and start it.
         """
+        builds = self.findBuilds(project, test_path)
+        for build in builds:
+            build.version = version
+            build.run()
+            self.report(build)
+            self.builds.append(build)
+            def f(_, builder, build):
+                builder.builds.remove(build)
+            build.done.addCallback(f, self, build)
         
     
     def _findHeads(self, project, test_path=None):

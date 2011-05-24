@@ -101,6 +101,12 @@ class IBuilder(Interface):
         """
         Remove a reporter from this Builder.
         """
+    
+    
+    def report(story):
+        """
+        You should be able to report things.
+        """
 
 
 

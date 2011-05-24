@@ -4,7 +4,7 @@ from twisted.python.filepath import FilePath
 
 from simplebb.interface import IBuilder
 from simplebb.builder import FileBuilder, ReportableMixin
-from simplebb.build import FileBuild
+from simplebb.build import FileBuild, Build
 
 
 class ReportableMixinTest(TestCase):
@@ -232,9 +232,41 @@ class FileBuilderTest(TestCase):
 
     def test_requestBuild(self):
         """
-        Should implement requestBuild
+        requestBuild should pass the results of findBuilds through
+        report() and should add to the builds list.
         """
-        raise NotImplementedException("Need to write this test")
-    test_requestBuild.todo = 'Need to make it do something'
+        b = FileBuilder('foo')
+        
+        # fake out some stuff
+        r = [Build()]
+        
+        run_called = []
+        def fakerun():
+            run_called.append(True)
+        r[0].run = fakerun
+        
+        b.findBuilds = lambda *ign: r
+        
+        report_called = []
+        b.report = report_called.append
+        
+        b.requestBuild('version', 'foo', 'bar')
+        
+        # version should be set on the Build
+        self.assertEqual(r[0].version, 'version')
+        
+        self.assertEqual(run_called, [True],
+            "Build.run should have been called")
+        
+        self.assertEqual(report_called, [r[0]],
+            "Build.report should have been called")
+        
+        self.assertEqual(b.builds, [r[0]],
+            "Should add the running build to list")
+        
+        r[0].done.callback(r[0])
+        self.assertEqual(b.builds, [],
+            "When the build finishes, remove it from the running builds list.")
+        
 
 
