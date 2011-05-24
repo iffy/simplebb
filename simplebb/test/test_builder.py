@@ -36,7 +36,22 @@ class ReportableMixinTest(TestCase):
         self.assertEqual(b._reporters, [])
         
         b.removeReporter(o)
-        self.assertEqual(b._reporters, [])        
+        self.assertEqual(b._reporters, [])
+    
+    
+    def test_report(self):
+        """
+        Reporters can be called.
+        """
+        b = ReportableMixin()
+        c1 = []
+        c2 = []
+        b.addReporter(c1.append)
+        b.addReporter(c2.append)
+        
+        b.report('something')
+        self.assertEqual(c1, ['something'])
+        self.assertEqual(c2, ['something'])
 
 
 

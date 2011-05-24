@@ -33,6 +33,14 @@ class ReportableMixin:
             self._reporters.remove(reporter)
         except ValueError:
             pass
+    
+    
+    def report(self, story):
+        """
+        Calls each reporter with the story.
+        """
+        for reporter in self._reporters:
+            reporter(story)
 
 
 
