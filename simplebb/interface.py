@@ -73,11 +73,6 @@ class IBuilder(Interface):
     uid = Attribute('''
         str: unique identifier for this Builder
         ''')
-    
-    
-    builds = Attribute('''
-        list[IBuild]: builds I know about that have not finished.
-        ''')
 
 
     def requestBuild(version, project, test_path=None):
@@ -105,7 +100,7 @@ class IBuilder(Interface):
     
     def report(story):
         """
-        You should be able to report things.
+        Called with a Build whenever the build is started or finished.
         """
 
 

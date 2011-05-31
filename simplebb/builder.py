@@ -61,7 +61,6 @@ class FileBuilder(ReportableMixin):
     def __init__(self, path=None):
         ReportableMixin.__init__(self)
         
-        self.builds = []
         if isinstance(path, FilePath):
             self.path = path
         elif path is not None:
@@ -130,18 +129,6 @@ class FileBuilder(ReportableMixin):
                 b.builder = self
                 yield b
 
-    
-    def receiveReport(self, build):
-        """
-        Note creation/completion of this build by recording it in self.builds.
-        
-        Register me as a reporter on a Builder if you want to have local info
-        about builds.
-        """
-        if build.done.called:
-            self.builds.remove(build)
-        else:
-            self.builds.append(build)
 
 
 

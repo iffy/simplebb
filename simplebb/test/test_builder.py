@@ -41,7 +41,7 @@ class ReportableMixinTest(TestCase):
     
     def test_report(self):
         """
-        Reporters can be called.
+        Reporters are called with .report()
         """
         b = ReportableMixin()
         c1 = []
@@ -184,10 +184,13 @@ class FileBuilderTest(TestCase):
         ending up with FileBuild instances with the correct properties set.
         """
         root = FilePath(self.mktemp())
+        # project/
         project = root.child('project')
         project.makedirs()
         
+        # project/foo
         foo = project.child('foo')
+        # project/bar
         bar = project.child('bar')
         foo.setContent('foo')
         bar.setContent('bar')
@@ -215,38 +218,15 @@ class FileBuilderTest(TestCase):
         
         self.assertEqual(len(b._getChildFiles.called), 2)
         
-        self.assertTrue(isinstance(r[0], FileBuild))
-        self.assertEqual(r[0].project, 'project')
-        self.assertEqual(r[0].test_path, 'foo')
-        self.assertEqual(r[0].builder, b)
-        self.assertEqual(r[0]._filepath, foo)
+        expected = set([
+            ('project', 'foo', b, foo),
+            ('project', 'bar', b, bar),
+        ])
         
-        self.assertTrue(isinstance(r[1], FileBuild))
-        self.assertEqual(r[1].project, 'project')
-        self.assertEqual(r[1].test_path, 'bar')
-        self.assertEqual(r[1].builder, b)
-        self.assertEqual(r[1]._filepath, bar)
+        actual = [(x.project, x.test_path, x.builder, x._filepath) for x in r]
         
+        self.assertEqual(expected, set(actual))        
         self.assertEqual(len(r), 2)
-
-
-    def test_receiveReport(self):
-        """
-        Builders should be able to receive reports about Builds and add/remove
-        them from their local Build list.
-        """
-        fb = FileBuilder('foo')
-        self.assertEqual(fb.builds, [])
-        b = Build()
-        fb.receiveReport(b)
-        self.assertEqual(fb.builds, [b])
-        
-        # fake completion
-        b.done.callback(fb)
-        self.assertEqual(fb.builds, [b])
-        
-        fb.receiveReport(b)
-        self.assertEqual(fb.builds, [])
 
 
     def test_requestBuild(self):
