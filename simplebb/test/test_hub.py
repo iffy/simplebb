@@ -1,6 +1,7 @@
 from twisted.trial.unittest import TestCase
 from zope.interface.verify import verifyClass, verifyObject
 
+from twisted.spread import pb
 
 from simplebb.interface import IBuilder, IEmitter, IObserver, IBuilderHub
 from simplebb.hub import Hub
@@ -33,6 +34,13 @@ class HubTest(TestCase):
     
     def test_Builder(self):
         self.assertTrue(issubclass(Hub, Builder))
+    
+    
+    def test_pbRoot(self):
+        """
+        Should be able to be shared over the wire
+        """
+        self.assertTrue(issubclass(Hub, pb.Root))
     
     
     def test_buildReceived(self):

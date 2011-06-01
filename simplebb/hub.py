@@ -1,5 +1,5 @@
+from twisted.spread import pb
 from zope.interface import implements
-
 
 from simplebb.interface import IBuilder, IEmitter, IObserver, IBuilderHub
 from simplebb.report import Emitter
@@ -8,7 +8,7 @@ from simplebb.util import generateId
 
 
 
-class Hub(Builder, Emitter):
+class Hub(Builder, Emitter, pb.Root):
     """
     I am a build server instance's central hub.
     """
