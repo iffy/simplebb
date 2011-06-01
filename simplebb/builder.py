@@ -42,6 +42,7 @@ class Builder:
     
     def __init__(self):
         self.uid = generateId()
+        self._pastRequestIds = set([])
 
 
     def build(self, request):
@@ -53,7 +54,9 @@ class Builder:
         if 'time' not in request:
             request['time'] = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S %f%Z')
         
-        self._build(request)
+        if request['uid'] not in self._pastRequestIds:
+            self._pastRequestIds.add(request['uid'])
+            self._build(request)
     
     
     def _build(self, request):

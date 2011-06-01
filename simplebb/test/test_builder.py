@@ -135,7 +135,28 @@ class BuilderTest(TestCase):
         Should be overwritten
         """
         b = Builder()
-        self.assertEqual(None, b._build({}))       
+        self.assertEqual(None, b._build({}))
+    
+    
+    def test_build_alreadyRequested(self):
+        """
+        Requests for builds will only be passed to _build once
+        per uid
+        """
+        b = Builder()
+        
+        called = []
+        b._build = called.append
+        
+        r = dict(project='foo', version='bar', uid='something')
+        
+        b.build(r)
+        self.assertEqual(called, [r])
+        
+        b.build(r)
+        self.assertEqual(called, [r],
+            "Should not have sent to _build this time")
+           
 
 
 
