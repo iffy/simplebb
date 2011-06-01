@@ -209,6 +209,13 @@ class HubTest(TestCase):
         d.addCallback(lambda x: ch.disconnect('tcp:host=127.0.0.1:port=10999'))
         d.addCallback(lambda x: sh.stopServer('tcp:10999'))
         return d
+    
+    
+    def test_gotRemoteRoot(self):
+        """
+        Should wrap the root
+        """
+        self.fail("not written yet")
         
         
         
