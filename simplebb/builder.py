@@ -1,42 +1,13 @@
 from zope.interface import implements
 from twisted.python.filepath import FilePath
 
-from simplebb.interface import IBuilder
+from simplebb.interface import IBuilder, IEmitter
 from simplebb.build import FileBuild
+from simplebb.report import Emitter
 
 
 
-class ReportableMixin:
-    """
-    Mix me in if you want to have the reporting part of the IBuilder
-    interface.
-    """
-
-
-    def __init__(self):
-        self._reporters = []
-    
-    
-    def addReporter(self, reporter):
-        """
-        Add a reporter so that Build events will be given to the reporter.
-        """
-        if reporter not in self._reporters:
-            self._reporters.append(reporter)
-    
-    
-    def removeReporter(self, reporter):
-        """
-        Removes a reporter so it won't be notified anymore about Build events.
-        """
-        try:
-            self._reporters.remove(reporter)
-        except ValueError:
-            pass
-
-
-
-class FileBuilder(ReportableMixin):
+class FileBuilder(Emitter):
     """
     I create and run FileBuilds found from my root directory.
     """
@@ -51,7 +22,7 @@ class FileBuilder(ReportableMixin):
 
     
     def __init__(self, path=None):
-        ReportableMixin.__init__(self)
+        Emitter.__init__(self)
         
         if isinstance(path, FilePath):
             self.path = path
@@ -68,13 +39,12 @@ class FileBuilder(ReportableMixin):
             build.version = version
             build.run()
             
-            # notify that the build started
-            self.report(build)
-                
-            # notify when the build is done
-            def f(_, self, build):
-                self.report(build)
-            build.done.addCallback(f, self, build)
+            self.emit(build.toDict())
+            
+            def emitDone(build, self):
+                self.emit(build.toDict())
+            
+            build.done.addCallback(emitDone, self)
         
     
     def _findHeads(self, project, test_path=None):

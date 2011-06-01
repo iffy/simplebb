@@ -42,6 +42,17 @@ class IBuild(Interface):
         ''')
     
     
+    done = Attribute('''
+        Deferred: called back with self when done.
+        ''')
+    
+    
+    def run():
+        """
+        Start this build running.
+        """
+    
+    
     def toDict():
         """
         Convert this Build into a transportable dict.
@@ -108,9 +119,9 @@ class IObserver(Interface):
 
 
 
-class IBuilderBoss(Interface):
+class IBuilderHub(Interface):
     """
-    I know about other Builders.
+    I know about other Builders and coordinate between them.
     """
 
     

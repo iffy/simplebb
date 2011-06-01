@@ -2,56 +2,9 @@ from twisted.trial.unittest import TestCase
 from zope.interface.verify import verifyClass, verifyObject
 from twisted.python.filepath import FilePath
 
-from simplebb.interface import IBuilder
-from simplebb.builder import FileBuilder, ReportableMixin
+from simplebb.interface import IBuilder, IEmitter
+from simplebb.builder import FileBuilder
 from simplebb.build import FileBuild, Build
-
-
-class ReportableMixinTest(TestCase):
-    
-    
-    def test_addReporter(self):
-        """
-        Reporters can be added.
-        """
-        b = ReportableMixin()
-        self.assertEqual(b._reporters, [])
-        o = object()
-        b.addReporter(o)
-        self.assertEqual(b._reporters, [o])
-
-        b.addReporter(o)
-        self.assertEqual(b._reporters, [o],
-            "Reports should only be added once")
-    
-    
-    def test_removeReporter(self):
-        """
-        Reports can be removed.
-        """
-        b = ReportableMixin()
-        o = object()
-        b._reporters = [o]
-        b.removeReporter(o)
-        self.assertEqual(b._reporters, [])
-        
-        b.removeReporter(o)
-        self.assertEqual(b._reporters, [])
-    
-    
-    def test_report(self):
-        """
-        Reporters are called with .report()
-        """
-        b = ReportableMixin()
-        c1 = []
-        c2 = []
-        b.addReporter(c1.append)
-        b.addReporter(c2.append)
-        
-        b.report('something')
-        self.assertEqual(c1, ['something'])
-        self.assertEqual(c2, ['something'])
 
 
 
@@ -63,6 +16,11 @@ class FileBuilderTest(TestCase):
         verifyObject(IBuilder, FileBuilder())
     
     
+    def test_IEmitter(self):
+        verifyClass(IEmitter, FileBuilder)
+        verifyObject(IEmitter, FileBuilder())
+
+
     def test_init(self):
         """
         Should have a base path.
@@ -231,39 +189,53 @@ class FileBuilderTest(TestCase):
 
     def test_requestBuild(self):
         """
-        requestBuild should pass the results of findBuilds through
-        report()
+        requestBuild should
+            - get the results of findBuilds,
+            - set the version attribute of each Build,
+            - call run() on each Build,
+            - pass each Build.toDict through emit
+            - wait on the Build's completion to send the finished build.toDict
+              through emit.
         """
         b = FileBuilder('foo')
         
-        # fake out some stuff
         r = [Build()]
         
+        # fake out Build.run()
         run_called = []
         def fakerun():
             run_called.append(True)
         r[0].run = fakerun
         
+        # fake out findBuilds()
         b.findBuilds = lambda *ign: r
         
-        report_called = []
-        b.report = report_called.append
+        # fake out emit()
+        emit_called = []
+        b.emit = emit_called.append
+        
         
         b.requestBuild('version', 'foo', 'bar')
         
+        
         # version should be set on the Build
-        self.assertEqual(r[0].version, 'version')
+        self.assertEqual(r[0].version, 'version',
+            "Should have set the version on the Build")
         
         self.assertEqual(run_called, [True],
-            "Build.run should have been called")
+            "Build.run() should have been called")
         
-        self.assertEqual(report_called, [r[0]],
-            "Build.report should have been called")
+        self.assertEqual(emit_called, [r[0].toDict()],
+            "Builder.emit() should have been called")
         
+        # reset the fake
+        emit_called.pop()
+        
+        # finish the build manually.
         r[0].done.callback(r[0])
         
-        self.assertEqual(report_called, [r[0], r[0]],
-            "When the build finishes, report should be called")
-        
+        self.assertEqual(emit_called, [r[0].toDict()],
+            "When the build finishes, Builder.emit should be called")
+
 
 
