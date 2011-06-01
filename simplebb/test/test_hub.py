@@ -1,6 +1,8 @@
 from twisted.trial.unittest import TestCase
 from zope.interface.verify import verifyClass, verifyObject
 
+from twisted.internet.endpoints import clientFromString
+from twisted.internet import reactor
 from twisted.spread import pb
 
 from simplebb.interface import IBuilder, IEmitter, IObserver, IBuilderHub
@@ -12,6 +14,9 @@ from simplebb.builder import Builder
 class HubTest(TestCase):
     
     
+    timeout = 1
+
+
     def test_IBuilder(self):
         verifyClass(IBuilder, Hub)
         verifyObject(IBuilder, Hub())
@@ -105,6 +110,91 @@ class HubTest(TestCase):
         o = dict(foo='bar')
         h.remote_build(o)
         self.assertEqual(called, [o])
+    
+    
+    def test_getServerFactory(self):
+        """
+        Should return an instance of pb.PBServerFactory with self passed in.
+        """
+        h = Hub()
+        f = h.getServerFactory()
+        self.assertTrue(isinstance(f, pb.PBServerFactory))
+        self.assertEqual(f.root, h)
+    
+    
+    def test_startServer(self):
+        """
+        Should call twisted.internet.endpoints.serverFromString and hook that
+        up to getServerFactory
+        """
+        h = Hub()
+        h.remote_echo = lambda x: x
+        h.startServer('tcp:10999')
+        
+        # connect to it
+        self.clientPort = None
+        client = clientFromString(reactor, 'tcp:host=127.0.0.1:port=10999')
+        factory = pb.PBClientFactory()
+        d = client.connect(factory)
+        
+        def saveClient(clientPort):
+            self.clientPort = clientPort
+
+        d.addCallback(saveClient)
+        d.addCallback(lambda ign: factory.getRootObject())
+        d.addCallback(lambda obj: obj.callRemote('echo', 'foo'))
+        d.addCallback(lambda res: self.assertEqual(res, 'foo'))
+        d.addCallback(lambda ign: self.clientPort.transport.loseConnection())
+        d.addCallback(lambda ign: h.stopServer('tcp:10999'))
+        return d
+    
+    
+    def test_stopServer(self):
+        """
+        You can have many servers running and stop them individually
+        """
+        h = Hub()
+        h.remote_echo = lambda x: x
+        d = h.startServer('tcp:10999')
+        d.addCallback(lambda x: h.startServer('tcp:10888'))
+        
+        def killOne(_):
+            return h.stopServer('tcp:10888')
+        d.addCallback(killOne)
+        
+        
+        def testOne(_):
+            # still can connect to the other
+            self.clientPort = None
+            client = clientFromString(reactor, 'tcp:host=127.0.0.1:port=10999')
+            factory = pb.PBClientFactory()
+            d = client.connect(factory)
+            
+            def saveClient(clientPort):
+                self.clientPort = clientPort
+    
+            d.addCallback(saveClient)
+            d.addCallback(lambda ign: factory.getRootObject())
+            d.addCallback(lambda obj: obj.callRemote('echo', 'foo'))
+            d.addCallback(lambda res: self.assertEqual(res, 'foo'))
+            d.addCallback(lambda ign: self.clientPort.transport.loseConnection())
+            d.addCallback(lambda ign: h.stopServer('tcp:10999'))
+            return d
+        d.addCallback(testOne)
+        return d
+    
+    
+    def test_stopServer_notThere(self):
+        """
+        It is an error to stop a server that does not exist
+        """
+        h = Hub()
+        self.assertRaises(KeyError, h.stopServer, 'foobar')
+        
+        
+        
+
+
 
 
 

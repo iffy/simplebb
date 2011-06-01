@@ -1,4 +1,6 @@
 from twisted.spread import pb
+from twisted.internet import endpoints
+from twisted.internet import reactor
 from zope.interface import implements
 
 from simplebb.interface import IBuilder, IEmitter, IObserver, IBuilderHub
@@ -20,6 +22,7 @@ class Hub(Builder, Emitter, pb.Root):
         Emitter.__init__(self)
         Builder.__init__(self)
         self._builders = []
+        self._servers = {}
 
     
     def buildReceived(self, buildDict):
@@ -58,6 +61,35 @@ class Hub(Builder, Emitter, pb.Root):
         Just build
         """
         self.build(request)
+    
+    
+    def getServerFactory(self):
+        """
+        Return a PBServerFactory for listening for connections.
+        """
+        return pb.PBServerFactory(self)
+    
+    
+    def startServer(self, description):
+        """
+        Start a PB Server with the given endpoint description string
+        """
+        server = endpoints.serverFromString(reactor, description)
+        factory = self.getServerFactory()
+        
+        def getServer(server, description):
+            self._servers[description] = server
+            return server
+        return server.listen(factory).addCallback(getServer, description)
+    
+    
+    def stopServer(self, description):
+        """
+        Stop the server running with the description
+        """
+        d = self._servers[description].stopListening()
+        del self._servers[description]
+        return d
 
 
 
