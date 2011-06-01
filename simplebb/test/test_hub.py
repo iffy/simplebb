@@ -190,6 +190,25 @@ class HubTest(TestCase):
         """
         h = Hub()
         self.assertRaises(KeyError, h.stopServer, 'foobar')
+    
+    
+    def test_connect(self):
+        """
+        You can connect to other servers
+        """
+        sh = Hub()
+        ch = Hub()
+        called = []
+        ch.gotRemoteRoot = called.append
+        
+        sh.startServer('tcp:10999')
+        
+        d = ch.connect('tcp:host=127.0.0.1:port=10999')
+        d.addCallback(lambda x: self.assertEqual(len(called), 1,
+            "Should have called .gotRemoteRoot"))
+        d.addCallback(lambda x: ch.disconnect('tcp:host=127.0.0.1:port=10999'))
+        d.addCallback(lambda x: sh.stopServer('tcp:10999'))
+        return d
         
         
         

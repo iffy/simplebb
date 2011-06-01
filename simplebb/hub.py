@@ -23,6 +23,7 @@ class Hub(Builder, Emitter, pb.Root):
         Builder.__init__(self)
         self._builders = []
         self._servers = {}
+        self._clients = {}
 
     
     def buildReceived(self, buildDict):
@@ -89,6 +90,33 @@ class Hub(Builder, Emitter, pb.Root):
         """
         d = self._servers[description].stopListening()
         del self._servers[description]
+        return d
+    
+    
+    def connect(self, description):
+        """
+        Connect to another PB Server with the given endpoint description string
+        """
+        client = endpoints.clientFromString(reactor, description)
+        factory = pb.PBClientFactory()
+        
+        def getClient(client, description):
+            self._clients[description] = client
+            return client
+        
+        def getRoot(client, factory):
+            return factory.getRootObject()
+            
+        d = client.connect(factory)
+        d.addCallback(getClient, description)
+        d.addCallback(getRoot, factory)
+        d.addCallback(self.gotRemoteRoot)
+        return d
+    
+    
+    def disconnect(self, description):
+        d = self._clients[description].transport.loseConnection()
+        del self._clients[description]
         return d
 
 
