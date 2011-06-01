@@ -61,5 +61,29 @@ class EmitterTest(TestCase):
         
         e.emit('something')
         self.assertEqual([x.build for x in observers], ['something', 'something'])
+    
+    
+    def test_emit_repeat(self):
+        """
+        The same message should not be emitted twice
+        """
+        class FakeObserver:
+            def buildReceived(self, buildDict):
+                self.build = buildDict
+        
+        e = Emitter()
+        o = FakeObserver()
+        e.addObserver(o)
+        
+        r = dict(project='foo')
+        
+        e.emit(r)
+        self.assertEqual(o.build, r)
+        
+        o.build = None
+        e.emit(r)
+        self.assertEqual(o.build, None,
+            "Should not have passed the report on because it was already"
+            "received: %r" % r)
 
 

@@ -1,6 +1,7 @@
 from zope.interface import implements
 from simplebb.interface import IEmitter
 
+import hashlib
 
 
 
@@ -14,6 +15,7 @@ class Emitter:
 
     def __init__(self):
         self._observers = []
+        self._handled = []
 
 
     def addObserver(self, observer):
@@ -36,6 +38,12 @@ class Emitter:
         """
         Emit to all my observer's buildReceived method the given buildDict
         """
+        # don't allow repeats
+        h = hashlib.sha256(unicode(buildDict)).hexdigest()
+        if h in self._handled:
+            return
+        self._handled.append(h)
+        
         for o in self._observers:
             o.buildReceived(buildDict)
 
