@@ -4,6 +4,7 @@ from zope.interface import Interface, implements
 
 
 from simplebb.interface import IBuild
+from simplebb.util import generateId
 
 
 
@@ -33,6 +34,7 @@ class Build:
     
     def __init__(self):
         self.done = defer.Deferred()
+        self.uid = generateId()
     
     
     def _finish(self, status):

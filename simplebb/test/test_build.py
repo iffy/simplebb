@@ -32,7 +32,7 @@ class BuildTest(TestCase):
         A Build should have the following attributes.
         """
         b = Build()
-        self.assertEqual(b.uid, None)
+        self.assertNotEqual(b.uid, None)
         self.assertEqual(b.status, None)
         self.assertEqual(b.version, None)
         self.assertEqual(b.project, None)

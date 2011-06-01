@@ -3,7 +3,8 @@ from zope.interface import implements
 
 from simplebb.interface import IBuilder, IEmitter, IObserver, IBuilderHub
 from simplebb.report import Emitter
-from simplebb.builder import generateId, Builder
+from simplebb.builder import Builder
+from simplebb.util import generateId
 
 
 
