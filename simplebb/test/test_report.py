@@ -62,3 +62,4 @@ class EmitterTest(TestCase):
         e.emit('something')
         self.assertEqual([x.build for x in observers], ['something', 'something'])
 
+

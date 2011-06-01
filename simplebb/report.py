@@ -38,3 +38,5 @@ class Emitter:
         """
         for o in self._observers:
             o.buildReceived(buildDict)
+
+
