@@ -13,8 +13,6 @@ class Hub(Builder, Emitter):
     I am a build server instance's central hub.
     """
     
-    uid = None
-    
     implements(IBuilder, IEmitter, IObserver, IBuilderHub)
 
 
@@ -26,7 +24,7 @@ class Hub(Builder, Emitter):
     
     def buildReceived(self, buildDict):
         """
-        Just emit it to my reporters.
+        Pass along notifications to by observers.
         """
         self.emit(buildDict)
 
