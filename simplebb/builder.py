@@ -1,9 +1,29 @@
+import random
+import hashlib
+import time
+import datetime
+
 from zope.interface import implements
 from twisted.python.filepath import FilePath
 
 from simplebb.interface import IBuilder, IEmitter
 from simplebb.build import FileBuild
 from simplebb.report import Emitter
+
+
+
+_idcount = 0
+
+def generateId():
+    """
+    Returns a uniqueish id.
+    """
+    global _idcount
+    _idcount += 1
+    random_part = hashlib.sha1(str(random.getrandbits(256))).hexdigest()
+    time_part = datetime.datetime.today().strftime('%Y-%m-%d-%H-%M-%S')
+    num_part = str(_idcount)
+    return '%s.%s.%s' % (num_part, time_part, random_part)
 
 
 
