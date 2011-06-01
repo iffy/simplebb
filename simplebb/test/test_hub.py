@@ -6,7 +6,7 @@ from twisted.internet import reactor
 from twisted.spread import pb
 
 from simplebb.interface import IBuilder, IEmitter, IObserver, IBuilderHub
-from simplebb.hub import Hub
+from simplebb.hub import Hub, RemoteBuilder
 from simplebb.builder import Builder
 
 
@@ -110,6 +110,41 @@ class HubTest(TestCase):
         o = dict(foo='bar')
         h.remote_build(o)
         self.assertEqual(called, [o])
+    
+    
+    def test_remote_addBuilder(self):
+        """
+        Should wrap the remote in a RemoteHub
+        """
+        class FakeFactory:
+            def __init__(self, it):
+                self.original = it
+        h = Hub()
+        h.remoteBuilderFactory = FakeFactory
+        called = []
+        h.addBuilder = called.append
+        h.remote_addBuilder('foo')
+        
+        self.assertEqual(len(called), 1)
+        r = called[0]
+        self.assertTrue(isinstance(r, FakeFactory))
+        self.assertEqual(r.original, 'foo')
+    
+    
+    def test_remote_removeBuilder(self):
+        """
+        Should remove anything with original the same
+        """
+        class FakeFactory:
+            def __init__(self, it):
+                self.original = it
+        h = Hub()
+        h.remoteBuilderFactory = FakeFactory
+        h.remote_addBuilder('foo')
+        self.assertEqual(len(h._builders), 1)
+        
+        h.remote_removeBuilder('foo')
+        self.assertEqual(len(h._builders), 0)
     
     
     def test_getServerFactory(self):
@@ -221,6 +256,21 @@ class HubTest(TestCase):
         
 
 
+class RemoteBuilderTest(TestCase):
+    
+    
+    def test_IBuilder(self):
+        verifyClass(IBuilder, RemoteBuilder)
+        verifyObject(IBuilder, RemoteBuilder('foo'))
+
+
+    def test_init(self):
+        """
+        Requires an object that will be the actual transport mechanism
+        """
+        b = RemoteBuilder('foo')
+        self.assertEqual(b.original, 'foo')
+        
 
 
 

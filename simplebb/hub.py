@@ -64,6 +64,24 @@ class Hub(Builder, Emitter, pb.Root):
         self.build(request)
     
     
+    def remote_addBuilder(self, builder):
+        """
+        Wraps the remote builder in remoteBuilderFactory and passes it on.
+        """
+        o = self.remoteBuilderFactory(builder)
+        self.addBuilder(o)
+    
+    
+    def remote_removeBuilder(self, builder):
+        """
+        Finds the wrapped remote builder and removes it.
+        """
+        for b in list(self._builders):
+            if isinstance(b, self.remoteBuilderFactory):
+                if b.original == builder:
+                    self.removeBuilder(b)
+    
+    
     def getServerFactory(self):
         """
         Return a PBServerFactory for listening for connections.
@@ -118,6 +136,21 @@ class Hub(Builder, Emitter, pb.Root):
         d = self._clients[description].transport.loseConnection()
         del self._clients[description]
         return d
+
+
+
+class RemoteBuilder:
+    """
+    I wrap a builder given over the wire so that you can interact with it
+    using the IBuilder interface.
+    """
+    
+    implements(IBuilder)
+
+
+    def __init__(self, original):
+        self.original = original
+
 
 
 
