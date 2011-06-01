@@ -95,3 +95,17 @@ class HubTest(TestCase):
         self.assertEqual(b.called, r)
 
 
+    def test_remote_build(self):
+        """
+        Should have a remote build that just runs build
+        """
+        h = Hub()
+        called = []
+        h.build = called.append
+        o = dict(foo='bar')
+        h.remote_build(o)
+        self.assertEqual(called, [o])
+
+
+
+

@@ -51,6 +51,13 @@ class Hub(Builder, Emitter, pb.Root):
         """
         for builder in self._builders:
             builder.build(request)
+    
+    
+    def remote_build(self, request):
+        """
+        Just build
+        """
+        self.build(request)
 
 
 
