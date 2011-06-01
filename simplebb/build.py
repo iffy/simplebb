@@ -48,6 +48,19 @@ class Build:
         Start this Build (whatever that means) with the given version
         """
         self._finish(self.status)
+    
+    
+    def toDict(self):
+        """
+        Return a dictionary representation of this Build
+        """
+        return dict(
+            uid=self.uid,
+            status=self.status,
+            project=self.project,
+            version=self.version,
+            test_path=self.test_path,
+            runtime=self.runtime)
 
 
 

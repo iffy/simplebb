@@ -8,47 +8,44 @@ class IBuild(Interface):
     """
 
 
-    done = Attribute('''
-        Deferred that fires with self once the build is done.
-        ''')
-
-
     uid = Attribute('''
         str: unique identifier for this Build
         ''')
-    
-    
+
+
     status = Attribute('''
         int: status indicating success (0) or failure (non-0) of Build.
         
         None if Build is not yet finished
         ''')
-    
-    
+
+
     version = Attribute('''
         str: version passed to the underlying build steps.
         ''')
-    
-    
+
+
     project = Attribute('''
         str: name of project being built.
         ''')
 
-    
+
     test_path = Attribute('''
         str: name of specific build steps used.
         
         Often '', otherwise a 'path/of/this/form'
         ''')
 
-    builder = Attribute('''
-        IBuilder: the owner of this Build.
-        ''')
 
-    
     runtime = Attribute('''
         int: number of seconds it took to run this Build.
         ''')
+    
+    
+    def toDict():
+        """
+        Convert this Build into a transportable dict.
+        """
 
 
 
@@ -74,34 +71,40 @@ class IBuilder(Interface):
 
 
 
-class IReporter(Interface):
+class IEmitter(Interface):
     """
-    I accept notification about builds via my L{report} method.
+    I emit build notifications to my registered observers.
     """
     
+    
+    def addObserver(observer):
+        """
+        Register an observer to be notified by this emitter.
+        """
+    
+    
+    def removeObserver(observer):
+        """
+        Unregister an observer from being notified by this emitter.
+        """
+
+
+
+class IObserver(Interface):
+    """
+    I observe interesting notifications about builds.
+    """
     
     def buildReceived(buildDict):
         """
-        Called with a Build dictionary whenever something interesting happens.
-        """
-    
-    
-    def addReporter(reporter):
-        """
-        Chain a reporter to this reporter.
-        """
-    
-    
-    def removeReporter(reporter):
-        """
-        Remove a reporter from this reporter's chain.
+        Called with a Build dictionary.
         """
 
 
 
-class IBuilderHub(Interface):
+class IBuilderBoss(Interface):
     """
-    I hold many Builders 
+    I know about other Builders.
     """
 
     

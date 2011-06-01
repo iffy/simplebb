@@ -85,7 +85,24 @@ class BuildTest(TestCase):
         b.done.addCallback(cb)
         
         b.run()
-        return b.done        
+        return b.done
+
+
+    def test_toDict(self):
+        """
+        Should read all the required attributes.
+        """
+        b = Build()
+        b.uid = 'something'
+        b.status = 10
+        b.project = 'project'
+        b.version = 'version'
+        b.test_path = 'foo/bar'
+        b.runtime = 203
+        self.assertEqual(b.toDict(), dict(
+            uid='something', status=10, project='project',
+            version='version', test_path='foo/bar', runtime=203))
+
 
 
 
@@ -187,6 +204,7 @@ class FileBuildTest(TestCase):
         
         b.run()
         return b.done
+
         
         
         

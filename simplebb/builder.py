@@ -33,14 +33,6 @@ class ReportableMixin:
             self._reporters.remove(reporter)
         except ValueError:
             pass
-    
-    
-    def report(self, story):
-        """
-        Calls each reporter with the story.
-        """
-        for reporter in self._reporters:
-            reporter(story)
 
 
 
@@ -67,7 +59,7 @@ class FileBuilder(ReportableMixin):
             self.path = FilePath(path)
 
 
-    def requestBuild(self, version, project, test_path=None):
+    def requestBuild(self, version, project, test_path=None, reqid=None):
         """
         Find the build in the file system and start it.
         """
