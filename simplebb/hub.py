@@ -3,11 +3,11 @@ from zope.interface import implements
 
 from simplebb.interface import IBuilder, IEmitter, IObserver, IBuilderHub
 from simplebb.report import Emitter
-from simplebb.builder import generateId
+from simplebb.builder import generateId, Builder
 
 
 
-class Hub(Emitter):
+class Hub(Builder, Emitter):
     """
     I am a build server instance's central hub.
     """
@@ -19,6 +19,7 @@ class Hub(Emitter):
 
     def __init__(self):
         Emitter.__init__(self)
+        Builder.__init__(self)
         self._builders = []
 
     
@@ -45,14 +46,12 @@ class Hub(Emitter):
             self._builders.remove(builder)
     
     
-    def requestBuild(self, version, project, test_path=None, reqid=None):
+    def _build(self, request):
         """
-        Pass along any new build request to my builders.
+        Pass along requests to my builders.
         """
-        if reqid is None:
-            reqid = self.uid + '.' + generateId()
         for builder in self._builders:
-            builder.requestBuild(version, project, test_path=test_path, reqid=reqid)
+            builder.build(request)
 
 
 

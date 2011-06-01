@@ -11,11 +11,6 @@ class IBuild(Interface):
     uid = Attribute('''
         str: unique identifier for this Build
         ''')
-    
-    
-    request_uid = Attribute('''
-        str: unique identifier for the request that caused this build.
-        ''')
 
 
     status = Attribute('''

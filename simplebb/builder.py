@@ -47,7 +47,7 @@ class Builder:
 
     def build(self, request):
         """
-        Initial set up of a request
+        Initial set up of a request.
         """
         if 'uid' not in request:
             request['uid'] = generateId()
@@ -90,10 +90,14 @@ class FileBuilder(Builder, Emitter):
             self.path = FilePath(path)
 
 
-    def build(self, version, project, test_path=None, reqid=None):
+    def _build(self, request):
         """
         Find the build in the file system and start it.
         """
+        project = request['project']
+        test_path = request['test_path']
+        version = request['version']
+        
         builds = self.findBuilds(project, test_path)
         for build in builds:
             build.version = version

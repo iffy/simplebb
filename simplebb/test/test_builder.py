@@ -347,9 +347,9 @@ class FileBuilderTest(TestCase):
         self.assertEqual(len(r), 2)
 
 
-    def test_build(self):
+    def test__build(self):
         """
-        build should
+        _build should
             - get the results of findBuilds,
             - set the version attribute of each Build,
             - call run() on each Build,
@@ -375,7 +375,7 @@ class FileBuilderTest(TestCase):
         b.emit = emit_called.append
         
         
-        b.build('version', 'foo', 'bar')
+        b._build(dict(version='version', project='foo', test_path='bar'))
         
         
         # version should be set on the Build

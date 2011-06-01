@@ -4,6 +4,7 @@ from zope.interface.verify import verifyClass, verifyObject
 
 from simplebb.interface import IBuilder, IEmitter, IObserver, IBuilderHub
 from simplebb.hub import Hub
+from simplebb.builder import Builder
 
 
 
@@ -28,6 +29,10 @@ class HubTest(TestCase):
     def test_IBuilderHub(self):
         verifyClass(IBuilderHub, Hub)
         verifyObject(IBuilderHub, Hub())
+    
+    
+    def test_Builder(self):
+        self.assertTrue(issubclass(Hub, Builder))
     
     
     def test_buildReceived(self):
@@ -66,20 +71,19 @@ class HubTest(TestCase):
         self.assertEqual(h._builders, [])
 
 
-    def test_requestBuild(self):
+    def test__build(self):
         """
         Should pass it along to all registered builders.
         """
         class FakeBuilder:
-            def requestBuild(self, *args, **kw):
-                self.called = args, kw
+            def build(self, request):
+                self.called = request
         
         b = FakeBuilder()
         h = Hub()
         h.addBuilder(b)
-        h.requestBuild('version', 'project', 'test_path')
-        self.assertEqual(b.called[0], ('version', 'project'))
-        self.assertEqual(b.called[1]['test_path'], 'test_path')
-        self.assertNotEqual(b.called[1]['reqid'], None)
+        r = {}
+        h._build(r)
+        self.assertEqual(b.called, r)
 
 
