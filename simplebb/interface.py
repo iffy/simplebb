@@ -51,18 +51,10 @@ class IBuild(Interface):
         ''')
 
 
-    def run():
-        """
-        Run this build.
-        
-        Returns self.done Deferred.
-        """
-
-
 
 class IBuilder(Interface):
     """
-    I am something that responds to build requests by creating Builds.
+    I am something that responds to build requests.
     """
     
     name = Attribute('''
@@ -75,33 +67,53 @@ class IBuilder(Interface):
         ''')
 
 
-    def requestBuild(version, project, test_path=None):
+    def requestBuild(project, version, test_path=None, reqid=None):
         """
         Request that I build the given project for the given version.
-        
-        Returns a Deferred that fires with a list of Builds.
+        """
+
+
+
+class IReporter(Interface):
+    """
+    I accept notification about builds via my L{report} method.
+    """
+    
+    
+    def buildReceived(buildDict):
+        """
+        Called with a Build dictionary whenever something interesting happens.
         """
     
     
     def addReporter(reporter):
         """
-        Add a reporter to this Builder.
-        
-        Reporters are callables that are called when something interesting happens
-        to a Build.  Right now, interesting events are creation and completion.
+        Chain a reporter to this reporter.
         """
     
     
     def removeReporter(reporter):
         """
-        Remove a reporter from this Builder.
-        """
-    
-    
-    def report(story):
-        """
-        Called with a Build whenever the build is started or finished.
+        Remove a reporter from this reporter's chain.
         """
 
+
+
+class IBuilderHub(Interface):
+    """
+    I hold many Builders 
+    """
+
+    
+    def addBuilder(builder):
+        """
+        Add a builder to this builder chain.
+        """
+    
+    
+    def removeBuilder(builder):
+        """
+        Remove a builder from this builder chain.
+        """
 
 
