@@ -3,7 +3,7 @@ from zope.interface.verify import verifyClass, verifyObject
 from twisted.python.filepath import FilePath
 
 from simplebb.interface import IBuilder, IEmitter
-from simplebb.builder import FileBuilder, generateId
+from simplebb.builder import Builder, FileBuilder, generateId
 from simplebb.build import FileBuild, Build
 
 
@@ -55,6 +55,91 @@ class generateIdTest(TestCase):
 
 
 
+class BuilderTest(TestCase):
+    
+    
+    def test_IBuilder(self):
+        verifyClass(IBuilder, Builder)
+        verifyObject(IBuilder, Builder())
+    
+    
+    def test_uid(self):
+        b = Builder()
+        self.assertNotEqual(b.uid, None)
+    
+    
+    def test_build_basic(self):
+        """
+        Should accept the basic requirements.
+        """
+        r = {
+            'project': 'foo',
+            'version': 'bar',
+        }
+        b = Builder()
+        b.build(r)
+    
+    
+    def test_build_uid(self):
+        """
+        Should populate uid if it's not there.
+        """
+        b = Builder()
+        r = dict(project='foo', version='bar')
+        
+        b.build(r)
+        self.assertNotEqual(r['uid'], None)
+        
+        uid = r['uid']
+        
+        b.build(r)
+        self.assertEqual(r['uid'], uid, "Should not overwrite the uid")
+    
+    
+    def test_build_start(self):
+        """
+        Should populate start time if it's not there
+        """
+        b = Builder()
+        r = dict(project='foo', version='bar')
+        
+        b.build(r)
+        self.assertNotEqual(r['time'], None)
+        
+        t = r['time']
+        
+        import time
+        time.sleep(0.01)
+        
+        b.build(r)
+        self.assertEqual(r['time'], t, "Should not overwrite the time")
+    
+    
+    def test_build_build(self):
+        """
+        Build should pass the build on to _build
+        """
+        b = Builder()
+        
+        called = []
+        b._build = called.append
+        
+        r = dict(project='foo', version='bar')
+        
+        b.build(r)
+        self.assertEqual(called, [r])
+    
+    
+    def test__build(self):
+        """
+        Should be overwritten
+        """
+        b = Builder()
+        self.assertEqual(None, b._build({}))       
+
+
+
+
 class FileBuilderTest(TestCase):
     
     
@@ -66,6 +151,13 @@ class FileBuilderTest(TestCase):
     def test_IEmitter(self):
         verifyClass(IEmitter, FileBuilder)
         verifyObject(IEmitter, FileBuilder())
+    
+    
+    def test_subclass(self):
+        """
+        Should inherit from Builder
+        """
+        self.assertTrue(issubclass(FileBuilder, Builder))
 
 
     def test_init(self):
@@ -234,9 +326,9 @@ class FileBuilderTest(TestCase):
         self.assertEqual(len(r), 2)
 
 
-    def test_requestBuild(self):
+    def test_build(self):
         """
-        requestBuild should
+        build should
             - get the results of findBuilds,
             - set the version attribute of each Build,
             - call run() on each Build,
@@ -262,7 +354,7 @@ class FileBuilderTest(TestCase):
         b.emit = emit_called.append
         
         
-        b.requestBuild('version', 'foo', 'bar')
+        b.build('version', 'foo', 'bar')
         
         
         # version should be set on the Build

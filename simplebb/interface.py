@@ -11,6 +11,11 @@ class IBuild(Interface):
     uid = Attribute('''
         str: unique identifier for this Build
         ''')
+    
+    
+    request_uid = Attribute('''
+        str: unique identifier for the request that caused this build.
+        ''')
 
 
     status = Attribute('''
@@ -75,7 +80,7 @@ class IBuilder(Interface):
         ''')
 
 
-    def requestBuild(project, version, test_path=None, reqid=None):
+    def build(request):
         """
         Request that I build the given project for the given version.
         """

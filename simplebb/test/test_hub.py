@@ -80,5 +80,6 @@ class HubTest(TestCase):
         h.requestBuild('version', 'project', 'test_path')
         self.assertEqual(b.called[0], ('version', 'project'))
         self.assertEqual(b.called[1]['test_path'], 'test_path')
+        self.assertNotEqual(b.called[1]['reqid'], None)
 
 

@@ -3,6 +3,7 @@ from zope.interface import implements
 
 from simplebb.interface import IBuilder, IEmitter, IObserver, IBuilderHub
 from simplebb.report import Emitter
+from simplebb.builder import generateId
 
 
 
@@ -10,6 +11,8 @@ class Hub(Emitter):
     """
     I am a build server instance's central hub.
     """
+    
+    uid = None
     
     implements(IBuilder, IEmitter, IObserver, IBuilderHub)
 
@@ -46,8 +49,10 @@ class Hub(Emitter):
         """
         Pass along any new build request to my builders.
         """
+        if reqid is None:
+            reqid = self.uid + '.' + generateId()
         for builder in self._builders:
-            builder.requestBuild(version, project, test_path=test_path)
+            builder.requestBuild(version, project, test_path=test_path, reqid=reqid)
 
 
 
