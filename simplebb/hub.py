@@ -113,7 +113,8 @@ class Hub(Builder, Emitter, pb.Root):
     
     def connect(self, description):
         """
-        Connect to another PB Server with the given endpoint description string
+        Connect to another PB Server as a client with the given endpoint
+        description string
         """
         client = endpoints.clientFromString(reactor, description)
         factory = pb.PBClientFactory()
@@ -133,9 +134,22 @@ class Hub(Builder, Emitter, pb.Root):
     
     
     def disconnect(self, description):
+        """
+        Disconnect the previous connection (initiated by me) to another
+        server matching the given endpoint description.
+        """
         d = self._clients[description].transport.loseConnection()
         del self._clients[description]
         return d
+    
+    
+    def gotRemoteRoot(self, remote):
+        """
+        Called when a remote root is received.
+        """
+        wrapped = RemoteBuilder(remote)
+        self.addBuilder(wrapped)
+        return wrapped
 
 
 
@@ -151,6 +165,12 @@ class RemoteBuilder:
     def __init__(self, original):
         self.original = original
 
+
+    def build(self, request):
+        """
+        Pass on this request to the remote side.
+        """
+        self.original.callRemote('build', request)
 
 
 

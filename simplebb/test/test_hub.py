@@ -250,7 +250,18 @@ class HubTest(TestCase):
         """
         Should wrap the root
         """
-        self.fail("not written yet")
+        h = Hub()
+        called = []
+        h.addBuilder = called.append
+        
+        r = h.gotRemoteRoot('foo')
+        
+        self.assertEqual(len(called), 1, "Should add the root to the list of "
+                         "builders")
+        obj = called[0]
+        self.assertTrue(isinstance(obj, RemoteBuilder))
+        self.assertEqual(obj.original, 'foo')
+        self.assertEqual(r, obj)
         
         
         
@@ -258,7 +269,15 @@ class HubTest(TestCase):
 
 class RemoteBuilderTest(TestCase):
     
+    class Fake:
     
+        def __init__(self):
+            self.called = []
+            
+        def callRemote(self, *args):
+            self.called.append(args)
+
+
     def test_IBuilder(self):
         verifyClass(IBuilder, RemoteBuilder)
         verifyObject(IBuilder, RemoteBuilder('foo'))
@@ -270,6 +289,16 @@ class RemoteBuilderTest(TestCase):
         """
         b = RemoteBuilder('foo')
         self.assertEqual(b.original, 'foo')
+    
+    
+    def test_build(self):
+        """
+        Just calls remote_build
+        """
+        f = self.Fake()
+        b = RemoteBuilder(f)
+        b.build('something')
+        self.assertEqual(f.called, [('build', 'something')])
         
 
 
