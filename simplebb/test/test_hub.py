@@ -352,5 +352,40 @@ class RemoteHubTest(TestCase):
         b = RemoteHub(f)
         b.removeBuilder('something')
         self.assertEqual(f.called, [('removeBuilder', 'something')])
+    
+    
+    def test_removeObserver(self):
+        """
+        Calls through remote
+        """
+        f = self.Fake()
+        b = RemoteHub(f)
+        b.removeObserver('something')
+        self.assertEqual(f.called, [('removeObserver', 'something')])
+
+
+    def test_addObserver(self):
+        """
+        Calls through remote
+        """
+        f = self.Fake()
+        b = RemoteHub(f)
+        b.addObserver('something')
+        self.assertEqual(f.called, [('addObserver', 'something')])
+    
+    
+    def test_buildReceived(self):
+        """
+        Calls through remote
+        """
+        f = self.Fake()
+        b = RemoteHub(f)
+        b.buildReceived('something')
+        self.assertEqual(f.called, [('buildReceived', 'something')])
+
+
+
+
+
 
 

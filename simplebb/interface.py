@@ -98,12 +98,6 @@ class IEmitter(Interface):
         """
         Unregister an observer from being notified by this emitter.
         """
-    
-    
-    def emit(buildDict):
-        """
-        Should call each registered observer's buildReceived method.
-        """
 
 
 

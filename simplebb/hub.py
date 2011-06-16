@@ -34,6 +34,18 @@ class RemoteHub:
 
     def removeBuilder(self, builder):
         self.original.callRemote('removeBuilder', builder)
+    
+    
+    def removeObserver(self, observer):
+        self.original.callRemote('removeObserver', observer)
+
+
+    def addObserver(self, observer):
+        self.original.callRemote('addObserver', observer)
+
+
+    def buildReceived(self, buildDict):
+        self.original.callRemote('buildReceived', buildDict)
 
 
 
