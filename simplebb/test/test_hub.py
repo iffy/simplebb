@@ -48,6 +48,13 @@ class HubTest(TestCase):
         self.assertTrue(issubclass(Hub, pb.Root))
     
     
+    def test_remoteBuilderFactory(self):
+        """
+        Should use RemoteBuilder as the factory
+        """
+        self.assertEqual(Hub.remoteBuilderFactory, RemoteBuilder)
+    
+    
     def test_buildReceived(self):
         """
         Should just call emit
@@ -250,7 +257,11 @@ class HubTest(TestCase):
         """
         Should wrap the root
         """
+        class FakeFactory:
+            def __init__(self, original):
+                self.original = original
         h = Hub()
+        h.remoteBuilderFactory = FakeFactory
         called = []
         h.addBuilder = called.append
         
@@ -259,7 +270,7 @@ class HubTest(TestCase):
         self.assertEqual(len(called), 1, "Should add the root to the list of "
                          "builders")
         obj = called[0]
-        self.assertTrue(isinstance(obj, RemoteBuilder))
+        self.assertTrue(isinstance(obj, FakeFactory))
         self.assertEqual(obj.original, 'foo')
         self.assertEqual(r, obj)
         
@@ -281,6 +292,11 @@ class RemoteBuilderTest(TestCase):
     def test_IBuilder(self):
         verifyClass(IBuilder, RemoteBuilder)
         verifyObject(IBuilder, RemoteBuilder('foo'))
+    
+    
+    def test_IBuilderHub(self):
+        verifyClass(IBuilderHub, RemoteBuilder)
+        verifyObject(IBuilderHub, RemoteBuilder('foo'))
 
 
     def test_init(self):

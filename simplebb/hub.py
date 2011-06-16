@@ -10,12 +10,35 @@ from simplebb.util import generateId
 
 
 
+class RemoteBuilder:
+    """
+    I wrap a builder given over the wire so that you can interact with it
+    using the IBuilder interface.
+    """
+    
+    implements(IBuilder, IBuilderHub)
+
+
+    def __init__(self, original):
+        self.original = original
+
+
+    def build(self, request):
+        """
+        Pass on this request to the remote side.
+        """
+        self.original.callRemote('build', request)
+
+
+
 class Hub(Builder, Emitter, pb.Root):
     """
     I am a build server instance's central hub.
     """
     
     implements(IBuilder, IEmitter, IObserver, IBuilderHub)
+    
+    remoteBuilderFactory = RemoteBuilder
 
 
     def __init__(self):
@@ -147,30 +170,10 @@ class Hub(Builder, Emitter, pb.Root):
         """
         Called when a remote root is received.
         """
-        wrapped = RemoteBuilder(remote)
+        wrapped = self.remoteBuilderFactory(remote)
         self.addBuilder(wrapped)
         return wrapped
 
-
-
-class RemoteBuilder:
-    """
-    I wrap a builder given over the wire so that you can interact with it
-    using the IBuilder interface.
-    """
-    
-    implements(IBuilder)
-
-
-    def __init__(self, original):
-        self.original = original
-
-
-    def build(self, request):
-        """
-        Pass on this request to the remote side.
-        """
-        self.original.callRemote('build', request)
 
 
 
