@@ -6,7 +6,7 @@ from twisted.internet import reactor
 from twisted.spread import pb
 
 from simplebb.interface import IBuilder, IEmitter, IObserver, IBuilderHub
-from simplebb.hub import Hub, RemoteBuilder
+from simplebb.hub import Hub, RemoteHub
 from simplebb.builder import Builder
 
 
@@ -48,11 +48,11 @@ class HubTest(TestCase):
         self.assertTrue(issubclass(Hub, pb.Root))
     
     
-    def test_remoteBuilderFactory(self):
+    def test_RemoteHubFactory(self):
         """
-        Should use RemoteBuilder as the factory
+        Should use RemoteHub as the factory
         """
-        self.assertEqual(Hub.remoteBuilderFactory, RemoteBuilder)
+        self.assertEqual(Hub.RemoteHubFactory, RemoteHub)
     
     
     def test_buildReceived(self):
@@ -127,7 +127,7 @@ class HubTest(TestCase):
             def __init__(self, it):
                 self.original = it
         h = Hub()
-        h.remoteBuilderFactory = FakeFactory
+        h.RemoteHubFactory = FakeFactory
         called = []
         h.addBuilder = called.append
         h.remote_addBuilder('foo')
@@ -146,7 +146,7 @@ class HubTest(TestCase):
             def __init__(self, it):
                 self.original = it
         h = Hub()
-        h.remoteBuilderFactory = FakeFactory
+        h.RemoteHubFactory = FakeFactory
         h.remote_addBuilder('foo')
         self.assertEqual(len(h._builders), 1)
         
@@ -258,10 +258,17 @@ class HubTest(TestCase):
         Should wrap the root
         """
         class FakeFactory:
+
+            addBuilder_called = None
+
             def __init__(self, original):
                 self.original = original
+
+            def addBuilder(self, builder):
+                self.addBuilder_called = builder
+
         h = Hub()
-        h.remoteBuilderFactory = FakeFactory
+        h.RemoteHubFactory = FakeFactory
         called = []
         h.addBuilder = called.append
         
@@ -273,12 +280,12 @@ class HubTest(TestCase):
         self.assertTrue(isinstance(obj, FakeFactory))
         self.assertEqual(obj.original, 'foo')
         self.assertEqual(r, obj)
-        
-        
-        
+        self.assertEqual(obj.addBuilder_called, h,
+            "Should give myself to the server I just connected to")
 
 
-class RemoteBuilderTest(TestCase):
+
+class RemoteHubTest(TestCase):
     
     class Fake:
     
@@ -290,20 +297,30 @@ class RemoteBuilderTest(TestCase):
 
 
     def test_IBuilder(self):
-        verifyClass(IBuilder, RemoteBuilder)
-        verifyObject(IBuilder, RemoteBuilder('foo'))
+        verifyClass(IBuilder, RemoteHub)
+        verifyObject(IBuilder, RemoteHub('foo'))
+
+
+    def test_IEmitter(self):
+        verifyClass(IEmitter, RemoteHub)
+        verifyObject(IEmitter, RemoteHub('foo'))
+    
+    
+    def test_IObserver(self):
+        verifyClass(IObserver, RemoteHub)
+        verifyObject(IObserver, RemoteHub('foo'))
     
     
     def test_IBuilderHub(self):
-        verifyClass(IBuilderHub, RemoteBuilder)
-        verifyObject(IBuilderHub, RemoteBuilder('foo'))
+        verifyClass(IBuilderHub, RemoteHub)
+        verifyObject(IBuilderHub, RemoteHub('foo'))
 
 
     def test_init(self):
         """
         Requires an object that will be the actual transport mechanism
         """
-        b = RemoteBuilder('foo')
+        b = RemoteHub('foo')
         self.assertEqual(b.original, 'foo')
     
     
@@ -312,11 +329,28 @@ class RemoteBuilderTest(TestCase):
         Just calls remote_build
         """
         f = self.Fake()
-        b = RemoteBuilder(f)
+        b = RemoteHub(f)
         b.build('something')
         self.assertEqual(f.called, [('build', 'something')])
-        
+    
+    
+    def test_addBuilder(self):
+        """
+        Calls through remote
+        """
+        f = self.Fake()
+        b = RemoteHub(f)
+        b.addBuilder('something')
+        self.assertEqual(f.called, [('addBuilder', 'something')])
 
 
+    def test_removeBuilder(self):
+        """
+        Calls through remote
+        """
+        f = self.Fake()
+        b = RemoteHub(f)
+        b.removeBuilder('something')
+        self.assertEqual(f.called, [('removeBuilder', 'something')])
 
 

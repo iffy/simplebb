@@ -8,15 +8,16 @@ from simplebb.report import Emitter
 from simplebb.builder import Builder
 from simplebb.util import generateId
 
+from twisted.python import log
 
 
-class RemoteBuilder:
+class RemoteHub:
     """
-    I wrap a builder given over the wire so that you can interact with it
-    using the IBuilder interface.
+    I wrap a Hub given over the wire so that you can interact with it
+    using the IBuilder, IBuilderHub interface.
     """
     
-    implements(IBuilder, IBuilderHub)
+    implements(IBuilder, IEmitter, IObserver, IBuilderHub)
 
 
     def __init__(self, original):
@@ -24,10 +25,15 @@ class RemoteBuilder:
 
 
     def build(self, request):
-        """
-        Pass on this request to the remote side.
-        """
         self.original.callRemote('build', request)
+    
+    
+    def addBuilder(self, builder):
+        self.original.callRemote('addBuilder', builder)
+
+
+    def removeBuilder(self, builder):
+        self.original.callRemote('removeBuilder', builder)
 
 
 
@@ -38,7 +44,7 @@ class Hub(Builder, Emitter, pb.Root):
     
     implements(IBuilder, IEmitter, IObserver, IBuilderHub)
     
-    remoteBuilderFactory = RemoteBuilder
+    RemoteHubFactory = RemoteHub
 
 
     def __init__(self):
@@ -62,6 +68,7 @@ class Hub(Builder, Emitter, pb.Root):
         """
         if builder not in self._builders:
             self._builders.append(builder)
+            log.msg('addBuilder(%r)' % builder)
 
 
     def removeBuilder(self, builder):
@@ -89,9 +96,9 @@ class Hub(Builder, Emitter, pb.Root):
     
     def remote_addBuilder(self, builder):
         """
-        Wraps the remote builder in remoteBuilderFactory and passes it on.
+        Wraps the remote builder in RemoteHubFactory and passes it on.
         """
-        o = self.remoteBuilderFactory(builder)
+        o = self.RemoteHubFactory(builder)
         self.addBuilder(o)
     
     
@@ -100,7 +107,7 @@ class Hub(Builder, Emitter, pb.Root):
         Finds the wrapped remote builder and removes it.
         """
         for b in list(self._builders):
-            if isinstance(b, self.remoteBuilderFactory):
+            if isinstance(b, self.RemoteHubFactory):
                 if b.original == builder:
                     self.removeBuilder(b)
     
@@ -128,6 +135,8 @@ class Hub(Builder, Emitter, pb.Root):
     def stopServer(self, description):
         """
         Stop the server running with the description
+        
+        @see: U{http://socuteurl.com/tuffyfluffmonsters}
         """
         d = self._servers[description].stopListening()
         del self._servers[description]
@@ -138,6 +147,8 @@ class Hub(Builder, Emitter, pb.Root):
         """
         Connect to another PB Server as a client with the given endpoint
         description string
+        
+        @see: U{http://socuteurl.com/twiggykitteh}
         """
         client = endpoints.clientFromString(reactor, description)
         factory = pb.PBClientFactory()
@@ -170,8 +181,10 @@ class Hub(Builder, Emitter, pb.Root):
         """
         Called when a remote root is received.
         """
-        wrapped = self.remoteBuilderFactory(remote)
+        log.msg('got remote root: %s' % remote)
+        wrapped = self.RemoteHubFactory(remote)
         self.addBuilder(wrapped)
+        wrapped.addBuilder(self)
         return wrapped
 
 
