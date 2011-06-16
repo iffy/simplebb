@@ -128,6 +128,20 @@ class Hub(Builder, Emitter, pb.Root):
                     self.removeBuilder(b)
     
     
+    def remote_getUID(self):
+        """
+        Returns my uid
+        """
+        return self.uid
+    
+    
+    def remote_getName(self):
+        """
+        Returns my name
+        """
+        return self.name
+    
+    
     def getServerFactory(self):
         """
         Return a PBServerFactory for listening for connections.
@@ -197,11 +211,8 @@ class Hub(Builder, Emitter, pb.Root):
         """
         Called when a remote root is received.
         """
-        log.msg('got remote root: %s' % remote)
-        wrapped = self.remoteHubFactory(remote)
-        self.addBuilder(wrapped)
-        wrapped.addBuilder(self)
-        return wrapped
+        self.remote_addBuilder(remote)
+        self.remote_addObserver(remote)
 
 
 

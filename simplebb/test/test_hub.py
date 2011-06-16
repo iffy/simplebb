@@ -255,33 +255,41 @@ class HubTest(TestCase):
     
     def test_gotRemoteRoot(self):
         """
-        Should wrap the root
+        Should just call remote_addBuilder and remote_addObserver with the
+        reference
         """
-        class FakeFactory:
-
-            addBuilder_called = None
-
-            def __init__(self, original):
-                self.original = original
-
-            def addBuilder(self, builder):
-                self.addBuilder_called = builder
-
         h = Hub()
-        h.remoteHubFactory = FakeFactory
-        called = []
-        h.addBuilder = called.append
         
-        r = h.gotRemoteRoot('foo')
+        called_1 = []
+        h.remote_addBuilder = called_1.append
         
-        self.assertEqual(len(called), 1, "Should add the root to the list of "
-                         "builders")
-        obj = called[0]
-        self.assertTrue(isinstance(obj, FakeFactory))
-        self.assertEqual(obj.original, 'foo')
-        self.assertEqual(r, obj)
-        self.assertEqual(obj.addBuilder_called, h,
-            "Should give myself to the server I just connected to")
+        called_2 = []
+        h.remote_addObserver = called_2.append
+
+        h.gotRemoteRoot('foo')
+        
+        self.assertEqual(called_1, ['foo'],
+            "Should pass to remote_addBuilder")
+        self.assertEqual(called_2, ['foo'],
+            "Should pass to remote_addObserver")
+    
+    
+    def test_remote_getUID(self):
+        """
+        Should just return uid
+        """
+        h = Hub()
+        h.uid = 'foo'
+        self.assertEqual(h.remote_getUID(), 'foo')
+    
+    
+    def test_remote_getName(self):
+        """
+        Should just return the name
+        """
+        h = Hub()
+        h.name = 'name'
+        self.assertEqual(h.remote_getName(), 'name')
 
 
 
