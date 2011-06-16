@@ -48,11 +48,11 @@ class HubTest(TestCase):
         self.assertTrue(issubclass(Hub, pb.Root))
     
     
-    def test_RemoteHubFactory(self):
+    def test_remoteHubFactory(self):
         """
         Should use RemoteHub as the factory
         """
-        self.assertEqual(Hub.RemoteHubFactory, RemoteHub)
+        self.assertEqual(Hub.remoteHubFactory, RemoteHub)
     
     
     def test_buildReceived(self):
@@ -127,7 +127,7 @@ class HubTest(TestCase):
             def __init__(self, it):
                 self.original = it
         h = Hub()
-        h.RemoteHubFactory = FakeFactory
+        h.remoteHubFactory = FakeFactory
         called = []
         h.addBuilder = called.append
         h.remote_addBuilder('foo')
@@ -146,7 +146,7 @@ class HubTest(TestCase):
             def __init__(self, it):
                 self.original = it
         h = Hub()
-        h.RemoteHubFactory = FakeFactory
+        h.remoteHubFactory = FakeFactory
         h.remote_addBuilder('foo')
         self.assertEqual(len(h._builders), 1)
         
@@ -268,7 +268,7 @@ class HubTest(TestCase):
                 self.addBuilder_called = builder
 
         h = Hub()
-        h.RemoteHubFactory = FakeFactory
+        h.remoteHubFactory = FakeFactory
         called = []
         h.addBuilder = called.append
         

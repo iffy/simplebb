@@ -44,7 +44,7 @@ class Hub(Builder, Emitter, pb.Root):
     
     implements(IBuilder, IEmitter, IObserver, IBuilderHub)
     
-    RemoteHubFactory = RemoteHub
+    remoteHubFactory = RemoteHub
 
 
     def __init__(self):
@@ -96,9 +96,9 @@ class Hub(Builder, Emitter, pb.Root):
     
     def remote_addBuilder(self, builder):
         """
-        Wraps the remote builder in RemoteHubFactory and passes it on.
+        Wraps the remote builder in remoteHubFactory and passes it on.
         """
-        o = self.RemoteHubFactory(builder)
+        o = self.remoteHubFactory(builder)
         self.addBuilder(o)
     
     
@@ -107,7 +107,7 @@ class Hub(Builder, Emitter, pb.Root):
         Finds the wrapped remote builder and removes it.
         """
         for b in list(self._builders):
-            if isinstance(b, self.RemoteHubFactory):
+            if isinstance(b, self.remoteHubFactory):
                 if b.original == builder:
                     self.removeBuilder(b)
     
@@ -182,7 +182,7 @@ class Hub(Builder, Emitter, pb.Root):
         Called when a remote root is received.
         """
         log.msg('got remote root: %s' % remote)
-        wrapped = self.RemoteHubFactory(remote)
+        wrapped = self.remoteHubFactory(remote)
         self.addBuilder(wrapped)
         wrapped.addBuilder(self)
         return wrapped
