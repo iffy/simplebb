@@ -258,6 +258,14 @@ class HubTest(TestCase):
         Should just call remote_addBuilder and remote_addObserver with the
         reference
         """
+        class FakeRemote:
+
+            def __init__(self):
+                self.called = []
+
+            def callRemote(self, *args):
+                self.called.append(args)
+
         h = Hub()
         
         called_1 = []
@@ -265,13 +273,20 @@ class HubTest(TestCase):
         
         called_2 = []
         h.remote_addObserver = called_2.append
-
-        h.gotRemoteRoot('foo')
         
-        self.assertEqual(called_1, ['foo'],
+        remote = FakeRemote()        
+
+        h.gotRemoteRoot(remote)
+        
+        self.assertEqual(called_1, [remote],
             "Should pass to remote_addBuilder")
-        self.assertEqual(called_2, ['foo'],
+        self.assertEqual(called_2, [remote],
             "Should pass to remote_addObserver")
+        self.assertEqual(set(remote.called), set([
+            ('addBuilder', h),
+            ('addObserver', h),
+        ]),
+            "Should have called the remote's addBuilder and addObserver")
     
     
     def test_remote_getUID(self):

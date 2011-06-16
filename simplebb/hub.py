@@ -209,10 +209,14 @@ class Hub(Builder, Emitter, pb.Root):
     
     def gotRemoteRoot(self, remote):
         """
-        Called when a remote root is received.
+        Called when a remote root is received as a client.
+        
+        In otherwords, C{self} is the client connecting to the C{remote} server.
         """
         self.remote_addBuilder(remote)
         self.remote_addObserver(remote)
+        remote.callRemote('addBuilder', self)
+        remote.callRemote('addObserver', self)
 
 
 
