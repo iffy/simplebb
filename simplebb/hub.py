@@ -19,6 +19,10 @@ class RemoteHub:
     
     implements(IBuilder, IEmitter, IObserver, IBuilderHub)
 
+    uid = None
+
+    name = None
+
 
     def __init__(self, original):
         self.original = original
