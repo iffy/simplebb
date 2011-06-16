@@ -305,6 +305,14 @@ class HubTest(TestCase):
         h = Hub()
         h.name = 'name'
         self.assertEqual(h.remote_getName(), 'name')
+    
+    
+    def test_remote_addObserver(self):
+        self.fail('Write me. I am easy')
+    
+    
+    def test_remote_removeObserver(self):
+        self.fail('Write me. I am easy')
 
 
 

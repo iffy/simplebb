@@ -13,9 +13,9 @@ h = Hub()
 h.startServer('tcp:8100')
 
 def monitor():
-    log.msg(h._builders)
-    log.msg(h._clients)
-    log.msg(h._servers)
+    txt = 'builders: %s, outgoing: %s, servers: %s' % (
+        len(h._builders), len(h._outgoingConns), len(h._servers))
+    log.msg(txt)
 t = task.LoopingCall(monitor)
 t.start(5)
 
