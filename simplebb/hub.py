@@ -52,7 +52,7 @@ class Hub(Builder, Emitter, pb.Root):
         Builder.__init__(self)
         self._builders = []
         self._servers = {}
-        self._clients = {}
+        self._outgoingConns = {}
 
     
     def buildReceived(self, buildDict):
@@ -154,7 +154,7 @@ class Hub(Builder, Emitter, pb.Root):
         factory = pb.PBClientFactory()
         
         def getClient(client, description):
-            self._clients[description] = client
+            self._outgoingConns[description] = client
             return client
         
         def getRoot(client, factory):
@@ -172,8 +172,8 @@ class Hub(Builder, Emitter, pb.Root):
         Disconnect the previous connection (initiated by me) to another
         server matching the given endpoint description.
         """
-        d = self._clients[description].transport.loseConnection()
-        del self._clients[description]
+        d = self._outgoingConns[description].transport.loseConnection()
+        del self._outgoingConns[description]
         return d
     
     
