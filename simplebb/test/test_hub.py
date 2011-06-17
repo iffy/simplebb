@@ -384,64 +384,40 @@ class RemoteHubTest(TestCase):
         self.assertEqual(b.original, 'foo')
     
     
+    def tr(self, meth, *args):
+        """
+        I test that calling meth calls callRemote(meth, *args)
+        """
+        f = FakeReference()
+        b = RemoteHub(f)
+        m = getattr(b, meth)
+        m(*args)
+        expected = tuple([meth] + list(args))
+        self.assertEqual(f.called, [expected])
+
+
     def test_build(self):
-        """
-        Just calls remote_build
-        """
-        f = FakeReference()
-        b = RemoteHub(f)
-        b.build('something')
-        self.assertEqual(f.called, [('build', 'something')])
-    
-    
+        self.tr('build', 'something')    
+
+
     def test_addBuilder(self):
-        """
-        Calls through remote
-        """
-        f = FakeReference()
-        b = RemoteHub(f)
-        b.addBuilder('something')
-        self.assertEqual(f.called, [('addBuilder', 'something')])
+        self.tr('addBuilder', 'something')
 
 
     def test_remBuilder(self):
-        """
-        Calls through remote
-        """
-        f = FakeReference()
-        b = RemoteHub(f)
-        b.remBuilder('something')
-        self.assertEqual(f.called, [('remBuilder', 'something')])
+        self.tr('remBuilder', 'something')
     
     
     def test_remObserver(self):
-        """
-        Calls through remote
-        """
-        f = FakeReference()
-        b = RemoteHub(f)
-        b.remObserver('something')
-        self.assertEqual(f.called, [('remObserver', 'something')])
+        self.tr('remObserver', 'something')
 
 
     def test_addObserver(self):
-        """
-        Calls through remote
-        """
-        f = FakeReference()
-        b = RemoteHub(f)
-        b.addObserver('something')
-        self.assertEqual(f.called, [('addObserver', 'something')])
+        self.tr('addObserver', 'something')
     
     
     def test_buildReceived(self):
-        """
-        Calls through remote
-        """
-        f = FakeReference()
-        b = RemoteHub(f)
-        b.buildReceived('something')
-        self.assertEqual(f.called, [('buildReceived', 'something')])
+        self.tr('buildReceived', 'something')
     
     
     def test_eq(self):
