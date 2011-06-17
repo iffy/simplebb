@@ -1,6 +1,6 @@
 from twisted.spread import pb
 from twisted.internet import endpoints
-from twisted.internet import reactor
+from twisted.internet import reactor, defer
 from zope.interface import implements
 
 from simplebb.interface import IBuilder, IEmitter, IObserver, IBuilderHub
@@ -20,8 +20,9 @@ class RemoteHub:
     implements(IBuilder, IEmitter, IObserver, IBuilderHub)
 
     uid = None
-
     name = None
+    
+    hub = None
 
 
     def __init__(self, original):
@@ -34,30 +35,39 @@ class RemoteHub:
         if isinstance(other, RemoteHub):
             return other.original == self.original
         return False
+    
+    
+    def wrappedCallRemote(self, *args):
+        """
+        I catch callRemote's exceptions and disconnect myself from the hub
+        if the remote side disconnected.
+        """
+        result = self.original.callRemote(*args)
+        return result
 
 
     def build(self, request):
-        self.original.callRemote('build', request)
+        self.wrappedCallRemote('build', request)
     
     
     def addBuilder(self, builder):
-        self.original.callRemote('addBuilder', builder)
+        self.wrappedCallRemote('addBuilder', builder)
 
 
     def remBuilder(self, builder):
-        self.original.callRemote('remBuilder', builder)
+        self.wrappedCallRemote('remBuilder', builder)
     
     
     def remObserver(self, observer):
-        self.original.callRemote('remObserver', observer)
+        self.wrappedCallRemote('remObserver', observer)
 
 
     def addObserver(self, observer):
-        self.original.callRemote('addObserver', observer)
+        self.wrappedCallRemote('addObserver', observer)
 
 
     def buildReceived(self, buildDict):
-        self.original.callRemote('buildReceived', buildDict)
+        self.wrappedCallRemote('buildReceived', buildDict)
 
 
 

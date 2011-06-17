@@ -2,7 +2,7 @@ from twisted.trial.unittest import TestCase
 from zope.interface.verify import verifyClass, verifyObject
 
 from twisted.internet.endpoints import clientFromString
-from twisted.internet import reactor
+from twisted.internet import reactor, defer
 from twisted.spread import pb
 
 from simplebb.interface import IBuilder, IEmitter, IObserver, IBuilderHub
@@ -18,9 +18,11 @@ class FakeReference:
 
     def __init__(self):
         self.called = []
+        self.result = defer.Deferred()
 
     def callRemote(self, *args):
         self.called.append(args)
+        return self.result
 
 
 
@@ -319,7 +321,7 @@ class HubTest(TestCase):
             "Should have called .gotRemoteRoot"))
         d.addCallback(lambda x: ch.disconnect('tcp:host=127.0.0.1:port=10999'))
         d.addCallback(lambda x: sh.stopServer('tcp:10999'))
-        return d
+        return d        
     
     
     def test_gotRemoteRoot(self):
@@ -355,6 +357,8 @@ class HubTest(TestCase):
 
 class RemoteHubTest(TestCase):
 
+    timeout = 1
+
 
     def test_IBuilder(self):
         verifyClass(IBuilder, RemoteHub)
@@ -382,18 +386,23 @@ class RemoteHubTest(TestCase):
         """
         b = RemoteHub('foo')
         self.assertEqual(b.original, 'foo')
+        self.assertEqual(b.hub, None)
     
     
     def tr(self, meth, *args):
         """
         I test that calling meth calls callRemote(meth, *args)
         """
-        f = FakeReference()
-        b = RemoteHub(f)
+        b = RemoteHub('foo')
+        called = []
+        def fake(*args):
+            called.append(args)
+        b.wrappedCallRemote = fake
+        
         m = getattr(b, meth)
         m(*args)
         expected = tuple([meth] + list(args))
-        self.assertEqual(f.called, [expected])
+        self.assertEqual(called, [expected])
 
 
     def test_build(self):
@@ -428,6 +437,18 @@ class RemoteHubTest(TestCase):
         b = RemoteHub('foo')
         self.assertEqual(a, b, "They should be equal because they wrap the "
                          "same original")
+    
+    
+    def test_wrappedCallRemote(self):
+        """
+        If commands succeed, nothing happens
+        """
+        f = FakeReference()
+        a = RemoteHub(f)
+        d = a.wrappedCallRemote('foo')
+        self.assertTrue(isinstance(d, defer.Deferred))
+        f.result.callback(None)
+        return d
 
 
 
