@@ -58,7 +58,6 @@ class RemoteHub:
         """
         Remove myself from my hub's known builders and observers
         """
-        print 'disconnectMe', self, self.hub
         self.hub.remObserver(self)
         self.hub.remBuilder(self)
     
