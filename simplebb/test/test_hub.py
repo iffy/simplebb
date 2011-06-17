@@ -98,16 +98,16 @@ class HubTest(TestCase):
         self.assertEqual(h._builders, [o])
 
 
-    def test_removeBuilder(self):
+    def test_remBuilder(self):
         """
         Should remove from the _builders list
         """
         h = Hub()
         o = object()
         h._builders = [o]
-        h.removeBuilder(o)
+        h.remBuilder(o)
         self.assertEqual(h._builders, [])
-        h.removeBuilder(o)
+        h.remBuilder(o)
         self.assertEqual(h._builders, [])
 
 
@@ -155,7 +155,7 @@ class HubTest(TestCase):
         self.assertEqual(r.original, 'foo')
     
     
-    def test_remote_removeBuilder(self):
+    def test_remote_remBuilder(self):
         """
         Should remove anything with original the same
         """
@@ -164,7 +164,7 @@ class HubTest(TestCase):
         h.remote_addBuilder('foo')
         self.assertEqual(len(h._builders), 1)
         
-        h.remote_removeBuilder('foo')
+        h.remote_remBuilder('foo')
         self.assertEqual(len(h._builders), 0)
 
 
@@ -203,16 +203,16 @@ class HubTest(TestCase):
         self.assertEqual(observer.original, 'foo')
 
 
-    def test_remote_removeObserver(self):
+    def test_remote_remObserver(self):
         """
         Should wrap the remote and remove it.
         """
         h = Hub()
         h.remoteHubFactory = FakeRemoteHub
         called = []
-        h.removeObserver = called.append
+        h.remObserver = called.append
         
-        h.remote_removeObserver('foo')
+        h.remote_remObserver('foo')
         
         self.assertEqual(len(called), 1)
         observer = called[0]
@@ -399,24 +399,24 @@ class RemoteHubTest(TestCase):
         self.assertEqual(f.called, [('addBuilder', 'something')])
 
 
-    def test_removeBuilder(self):
+    def test_remBuilder(self):
         """
         Calls through remote
         """
         f = FakeReference()
         b = RemoteHub(f)
-        b.removeBuilder('something')
-        self.assertEqual(f.called, [('removeBuilder', 'something')])
+        b.remBuilder('something')
+        self.assertEqual(f.called, [('remBuilder', 'something')])
     
     
-    def test_removeObserver(self):
+    def test_remObserver(self):
         """
         Calls through remote
         """
         f = FakeReference()
         b = RemoteHub(f)
-        b.removeObserver('something')
-        self.assertEqual(f.called, [('removeObserver', 'something')])
+        b.remObserver('something')
+        self.assertEqual(f.called, [('remObserver', 'something')])
 
 
     def test_addObserver(self):

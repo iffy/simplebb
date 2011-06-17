@@ -36,12 +36,12 @@ class RemoteHub:
         self.original.callRemote('addBuilder', builder)
 
 
-    def removeBuilder(self, builder):
-        self.original.callRemote('removeBuilder', builder)
+    def remBuilder(self, builder):
+        self.original.callRemote('remBuilder', builder)
     
     
-    def removeObserver(self, observer):
-        self.original.callRemote('removeObserver', observer)
+    def remObserver(self, observer):
+        self.original.callRemote('remObserver', observer)
 
 
     def addObserver(self, observer):
@@ -86,7 +86,7 @@ class Hub(Builder, Emitter, pb.Root):
             self._builders.append(builder)
 
 
-    def removeBuilder(self, builder):
+    def remBuilder(self, builder):
         """
         Remove a builder from being notified about buildRequests.
         """
@@ -117,14 +117,14 @@ class Hub(Builder, Emitter, pb.Root):
         self.addBuilder(o)
     
     
-    def remote_removeBuilder(self, builder):
+    def remote_remBuilder(self, builder):
         """
         Finds the wrapped remote builder and removes it.
         """
         for b in list(self._builders):
             if isinstance(b, self.remoteHubFactory):
                 if b.original == builder:
-                    self.removeBuilder(b)
+                    self.remBuilder(b)
     
     
     def remote_getUID(self):
@@ -149,12 +149,12 @@ class Hub(Builder, Emitter, pb.Root):
         self.addObserver(wrapped)
 
 
-    def remote_removeObserver(self, observer):
+    def remote_remObserver(self, observer):
         """
         Add the remote observer to my list of observers
         """
         wrapped = self.remoteHubFactory(observer)
-        self.removeObserver(wrapped)
+        self.remObserver(wrapped)
     
     
     def getServerFactory(self):

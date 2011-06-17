@@ -94,7 +94,7 @@ class IEmitter(Interface):
         """
     
     
-    def removeObserver(observer):
+    def remObserver(observer):
         """
         Unregister an observer from being notified by this emitter.
         """
@@ -125,7 +125,7 @@ class IBuilderHub(Interface):
         """
     
     
-    def removeBuilder(builder):
+    def remBuilder(builder):
         """
         Remove a builder from this builder chain.
         """

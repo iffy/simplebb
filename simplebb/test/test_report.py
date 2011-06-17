@@ -29,7 +29,7 @@ class EmitterTest(TestCase):
             "Observers should not be added multiple times")
     
     
-    def test_removeObservers(self):
+    def test_remObservers(self):
         """
         You should be able to remove observers.
         """
@@ -37,10 +37,10 @@ class EmitterTest(TestCase):
         o = object()
         e.addObserver(o)
         
-        e.removeObserver(o)
+        e.remObserver(o)
         self.assertFalse(o in e._observers)
         
-        e.removeObserver(o)
+        e.remObserver(o)
         self.assertFalse(o in e._observers)
     
     

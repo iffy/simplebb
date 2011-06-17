@@ -26,7 +26,7 @@ class Emitter:
             self._observers.append(observer)
     
     
-    def removeObserver(self, observer):
+    def remObserver(self, observer):
         """
         Unregister an observer from receiving buildReceived notifications.
         """
