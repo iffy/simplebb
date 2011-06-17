@@ -8,6 +8,7 @@ from twisted.spread import pb
 from simplebb.interface import IBuilder, IEmitter, IObserver, IBuilderHub
 from simplebb.hub import Hub, RemoteHub
 from simplebb.builder import Builder
+from simplebb.shell import ShellFactory
 
 
 
@@ -227,24 +228,34 @@ class HubTest(TestCase):
         self.assertEqual(observer.original, 'foo')
 
 
-    def test_getServerFactory(self):
+    def test_getPBServerFactory(self):
         """
         Should return an instance of pb.PBServerFactory with self passed in.
         """
         h = Hub()
-        f = h.getServerFactory()
+        f = h.getPBServerFactory()
         self.assertTrue(isinstance(f, pb.PBServerFactory))
         self.assertEqual(f.root, h)
+    
+    
+    def test_getShellServerFactory(self):
+        """
+        Should return an instance of hub.shell.ShellFactory
+        """
+        h = Hub()
+        f = h.getShellServerFactory()
+        self.assertTrue(isinstance(f, ShellFactory))
+        self.assertEqual(f.hub, h)
     
     
     def test_startServer(self):
         """
         Should call twisted.internet.endpoints.serverFromString and hook that
-        up to getServerFactory
+        up to the factory
         """
         h = Hub()
         h.remote_echo = lambda x: x
-        h.startServer('tcp:10999')
+        h.startServer(h.getPBServerFactory(), 'tcp:10999')
         
         # connect to it
         self.clientPort = None
@@ -262,16 +273,17 @@ class HubTest(TestCase):
         d.addCallback(lambda ign: self.clientPort.transport.loseConnection())
         d.addCallback(lambda ign: h.stopServer('tcp:10999'))
         return d
-    
-    
+
+
     def test_stopServer(self):
         """
         You can have many servers running and stop them individually
         """
         h = Hub()
         h.remote_echo = lambda x: x
-        d = h.startServer('tcp:10999')
-        d.addCallback(lambda x: h.startServer('tcp:10888'))
+        d = h.startServer(h.getPBServerFactory(), 'tcp:10999')
+        d.addCallback(lambda x: h.startServer(h.getPBServerFactory(),
+                                              'tcp:10888'))
         
         def killOne(_):
             return h.stopServer('tcp:10888')
@@ -317,7 +329,7 @@ class HubTest(TestCase):
         client.remoteHubFactory = lambda x: 'foo'
         client.gotRemoteRoot = called.append
 
-        server.startServer('tcp:10999')
+        server.startServer(server.getPBServerFactory(), 'tcp:10999')
         
         def check(r):
             self.assertEqual(called, ['foo'],
@@ -567,3 +579,13 @@ class RemoteHubTest(TestCase):
         self.assertEqual(hub.disconnectMe_called, [True])
 
 
+
+class HubShellTest(TestCase):
+    """
+    I test the shell aspects of the Hub
+    """
+    
+    def test_startShell(self):
+        """
+        
+        """
