@@ -307,51 +307,59 @@ class HubTest(TestCase):
     
     def test_connect(self):
         """
-        You can connect to other servers
+        You can connect to other servers.  This is functionalish
         """
-        sh = Hub()
-        ch = Hub()
+        server = Hub()
+        client = Hub()
         called = []
-        ch.gotRemoteRoot = called.append
+        client.remoteHubFactory = lambda x: 'foo'
+        client.gotRemoteRoot = called.append
+
+        server.startServer('tcp:10999')
         
-        sh.startServer('tcp:10999')
+        def check(r):
+            self.assertEqual(called, ['foo'],
+                "Should have called .gotRemoteRoot with wrapped remote")
+            return r
         
-        d = ch.connect('tcp:host=127.0.0.1:port=10999')
-        d.addCallback(lambda x: self.assertEqual(len(called), 1,
-            "Should have called .gotRemoteRoot"))
-        d.addCallback(lambda x: ch.disconnect('tcp:host=127.0.0.1:port=10999'))
-        d.addCallback(lambda x: sh.stopServer('tcp:10999'))
-        return d        
-    
-    
+        d = client.connect('tcp:host=127.0.0.1:port=10999')
+        d.addCallback(check)
+        d.addCallback(lambda x: client.disconnect(
+                      'tcp:host=127.0.0.1:port=10999'))
+        d.addCallback(lambda x: server.stopServer('tcp:10999'))
+        return d
+
+
     def test_gotRemoteRoot(self):
         """
-        Should just call remote_addBuilder and remote_addObserver with the
-        reference
+        Should add remote to builder and observers, add self to remote builders
+        and observers, start static info fetching.
         """
-        h = Hub()
+        hub = Hub()
+        remote = FakeRemoteHub('foo')
         
-        called_1 = []
-        h.remote_addBuilder = called_1.append
+        called = []
+        def makeFake(name):
+            def f(*args):
+                called.append((name, args))
+            return f
         
-        called_2 = []
-        h.remote_addObserver = called_2.append
+        hub.addBuilder = makeFake('addB')
+        hub.addObserver = makeFake('addO')
         
-        remote = FakeReference()        
+        remote.addBuilder = makeFake('r_addB')
+        remote.addObserver = makeFake('r_addO')
+        remote.getStaticInfo = makeFake('r_getStaticInfo')
 
-        h.gotRemoteRoot(remote)
+        hub.gotRemoteRoot(remote)
         
-        self.assertEqual(called_1, [remote],
-            "Should pass to remote_addBuilder")
-        self.assertEqual(called_2, [remote],
-            "Should pass to remote_addObserver")
-        self.assertEqual(set(remote.called), set([
-            ('addBuilder', h),
-            ('addObserver', h),
-        ]),
-            "Should have called the remote's addBuilder and addObserver")
-        
-        self.fail('Should get uid and name')
+        self.assertEqual(set(called), set([
+            ('addB', (remote,)),
+            ('addO', (remote,)),
+            ('r_addB', (hub,)),
+            ('r_addO', (hub,)),
+            ('r_getStaticInfo', ()),
+        ]))
 
 
 
@@ -389,6 +397,23 @@ class RemoteHubTest(TestCase):
         self.assertEqual(b.hub, None)
     
     
+    def test_getStaticInfo(self):
+        """
+        Should ask for uid and name
+        """
+        ref = FakeReference()
+        
+        def callRemote(cmd):
+            return defer.succeed(cmd)    
+        ref.callRemote = callRemote
+
+        remote = RemoteHub(ref)        
+        remote.getStaticInfo()
+        
+        self.assertEqual(remote.uid, 'getUID')
+        self.assertEqual(remote.name, 'getName')
+
+
     def tr(self, meth, *args):
         """
         I test that calling meth calls callRemote(meth, *args)
@@ -441,18 +466,24 @@ class RemoteHubTest(TestCase):
     
     def test_disconnectMe(self):
         """
-        Disconnect this remoteHub from his hub.  Does nothing right now
+        Disconnect this remoteHub from his hub by removing builders
+        and observers.
         """
         a = RemoteHub('foo')
+        a.hub = Hub()
+        
+        calledO = []
+        a.hub.remObserver = calledO.append
+        
+        calledB = []
+        a.hub.remBuilder = calledB.append
+        
         a.disconnectMe()
-    
-    
-    def test_disconnectMe_real(self):
-        """
-        Remove from observers and from builders
-        """
-        self.fail('hey')
-    test_disconnectMe_real.todo = 'Do this'
+        
+        self.assertEqual(calledO, [a],
+            "Should call remObserver")
+        self.assertEqual(calledB, [a],
+            "Should call remBuilder")
 
 
     def test_wrappedCallRemote(self):

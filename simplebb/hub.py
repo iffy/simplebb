@@ -57,6 +57,21 @@ class RemoteHub:
         """
         Remove myself from my hub's known builders and observers
         """
+        self.hub.remObserver(self)
+        self.hub.remBuilder(self)
+    
+    
+    def getStaticInfo(self):
+        """
+        Ask and set the name, and uid.
+        """
+        def gotUID(uid):
+            self.uid = uid
+        self.wrappedCallRemote('getUID').addCallback(gotUID)
+        
+        def gotName(name):
+            self.name = name
+        self.wrappedCallRemote('getName').addCallback(gotName)
 
 
     def build(self, request):
@@ -244,6 +259,7 @@ class Hub(Builder, Emitter, pb.Root):
         d = client.connect(factory)
         d.addCallback(getClient, description)
         d.addCallback(getRoot, factory)
+        d.addCallback(self.remoteHubFactory)
         d.addCallback(self.gotRemoteRoot)
         return d
     
@@ -263,11 +279,16 @@ class Hub(Builder, Emitter, pb.Root):
         Called when a remote root is received as a client.
         
         In otherwords, C{self} is the client connecting to the C{remote} server.
+        
+        @type remote: C{RemoteHub}
+        @param remote: A C{RemoteHub} wrapped around the reference.
         """
-        self.remote_addBuilder(remote)
-        self.remote_addObserver(remote)
-        remote.callRemote('addBuilder', self)
-        remote.callRemote('addObserver', self)
+        self.addBuilder(remote)
+        self.addObserver(remote)
+        
+        remote.addBuilder(self)
+        remote.addObserver(self)
+        remote.getStaticInfo()        
 
 
 
