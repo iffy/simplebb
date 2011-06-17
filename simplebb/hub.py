@@ -113,7 +113,6 @@ class Hub(Builder, Emitter, pb.Root):
         """
         Wraps the remote builder in remoteHubFactory and passes it on.
         """
-        print 'remote_addBuilder', builder
         o = self.remoteHubFactory(builder)
         self.addBuilder(o)
     

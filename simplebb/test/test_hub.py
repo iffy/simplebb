@@ -11,6 +11,24 @@ from simplebb.builder import Builder
 
 
 
+class FakeReference:
+    """
+    I fake Remotes
+    """
+
+    def __init__(self):
+        self.called = []
+
+    def callRemote(self, *args):
+        self.called.append(args)
+
+
+class FakeRemoteHub:
+    
+    def __init__(self, original):
+        self.original = original
+
+
 class HubTest(TestCase):
     
     
@@ -123,18 +141,15 @@ class HubTest(TestCase):
         """
         Should wrap the remote in a RemoteHub
         """
-        class FakeFactory:
-            def __init__(self, it):
-                self.original = it
         h = Hub()
-        h.remoteHubFactory = FakeFactory
+        h.remoteHubFactory = FakeRemoteHub
         called = []
         h.addBuilder = called.append
         h.remote_addBuilder('foo')
         
         self.assertEqual(len(called), 1)
         r = called[0]
-        self.assertTrue(isinstance(r, FakeFactory))
+        self.assertTrue(isinstance(r, FakeRemoteHub))
         self.assertEqual(r.original, 'foo')
     
     
@@ -142,18 +157,45 @@ class HubTest(TestCase):
         """
         Should remove anything with original the same
         """
-        class FakeFactory:
-            def __init__(self, it):
-                self.original = it
         h = Hub()
-        h.remoteHubFactory = FakeFactory
+        h.remoteHubFactory = FakeRemoteHub
         h.remote_addBuilder('foo')
         self.assertEqual(len(h._builders), 1)
         
         h.remote_removeBuilder('foo')
         self.assertEqual(len(h._builders), 0)
-    
-    
+
+
+    def test_remote_getUID(self):
+        """
+        Should just return uid
+        """
+        h = Hub()
+        h.uid = 'foo'
+        self.assertEqual(h.remote_getUID(), 'foo')
+
+
+    def test_remote_getName(self):
+        """
+        Should just return the name
+        """
+        h = Hub()
+        h.name = 'name'
+        self.assertEqual(h.remote_getName(), 'name')
+
+
+    def test_remote_addObserver(self):
+        """
+        Should wrap the remote (again!?) and add it.
+        """
+        h = Hub()
+        self.fail('Write me. I am easy')
+
+
+    def test_remote_removeObserver(self):
+        self.fail('Write me. I am easy')
+
+
     def test_getServerFactory(self):
         """
         Should return an instance of pb.PBServerFactory with self passed in.
@@ -258,14 +300,6 @@ class HubTest(TestCase):
         Should just call remote_addBuilder and remote_addObserver with the
         reference
         """
-        class FakeRemote:
-
-            def __init__(self):
-                self.called = []
-
-            def callRemote(self, *args):
-                self.called.append(args)
-
         h = Hub()
         
         called_1 = []
@@ -274,7 +308,7 @@ class HubTest(TestCase):
         called_2 = []
         h.remote_addObserver = called_2.append
         
-        remote = FakeRemote()        
+        remote = FakeReference()        
 
         h.gotRemoteRoot(remote)
         
@@ -287,44 +321,10 @@ class HubTest(TestCase):
             ('addObserver', h),
         ]),
             "Should have called the remote's addBuilder and addObserver")
-    
-    
-    def test_remote_getUID(self):
-        """
-        Should just return uid
-        """
-        h = Hub()
-        h.uid = 'foo'
-        self.assertEqual(h.remote_getUID(), 'foo')
-    
-    
-    def test_remote_getName(self):
-        """
-        Should just return the name
-        """
-        h = Hub()
-        h.name = 'name'
-        self.assertEqual(h.remote_getName(), 'name')
-    
-    
-    def test_remote_addObserver(self):
-        self.fail('Write me. I am easy')
-    
-    
-    def test_remote_removeObserver(self):
-        self.fail('Write me. I am easy')
 
 
 
 class RemoteHubTest(TestCase):
-    
-    class Fake:
-    
-        def __init__(self):
-            self.called = []
-            
-        def callRemote(self, *args):
-            self.called.append(args)
 
 
     def test_IBuilder(self):
@@ -359,7 +359,7 @@ class RemoteHubTest(TestCase):
         """
         Just calls remote_build
         """
-        f = self.Fake()
+        f = FakeReference()
         b = RemoteHub(f)
         b.build('something')
         self.assertEqual(f.called, [('build', 'something')])
@@ -369,7 +369,7 @@ class RemoteHubTest(TestCase):
         """
         Calls through remote
         """
-        f = self.Fake()
+        f = FakeReference()
         b = RemoteHub(f)
         b.addBuilder('something')
         self.assertEqual(f.called, [('addBuilder', 'something')])
@@ -379,7 +379,7 @@ class RemoteHubTest(TestCase):
         """
         Calls through remote
         """
-        f = self.Fake()
+        f = FakeReference()
         b = RemoteHub(f)
         b.removeBuilder('something')
         self.assertEqual(f.called, [('removeBuilder', 'something')])
@@ -389,7 +389,7 @@ class RemoteHubTest(TestCase):
         """
         Calls through remote
         """
-        f = self.Fake()
+        f = FakeReference()
         b = RemoteHub(f)
         b.removeObserver('something')
         self.assertEqual(f.called, [('removeObserver', 'something')])
@@ -399,7 +399,7 @@ class RemoteHubTest(TestCase):
         """
         Calls through remote
         """
-        f = self.Fake()
+        f = FakeReference()
         b = RemoteHub(f)
         b.addObserver('something')
         self.assertEqual(f.called, [('addObserver', 'something')])
@@ -409,7 +409,7 @@ class RemoteHubTest(TestCase):
         """
         Calls through remote
         """
-        f = self.Fake()
+        f = FakeReference()
         b = RemoteHub(f)
         b.buildReceived('something')
         self.assertEqual(f.called, [('buildReceived', 'something')])
