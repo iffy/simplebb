@@ -26,6 +26,14 @@ class RemoteHub:
 
     def __init__(self, original):
         self.original = original
+    
+    
+    def __eq__(self, other):
+        if other is self:
+            return True
+        if isinstance(other, RemoteHub):
+            return other.original == self.original
+        return False
 
 
     def build(self, request):
@@ -73,14 +81,15 @@ class Hub(Builder, Emitter, pb.Root):
     
     def buildReceived(self, buildDict):
         """
-        Pass along notifications to by observers.
+        Called by Emitters that I am observing to indicate that something
+        interesting has happened with this build.
         """
         self.emit(buildDict)
 
 
     def addBuilder(self, builder):
         """
-        Register a builder to be notified of buildRequests
+        Register a builder to be notified of buildRequests that I received.
         """
         if builder not in self._builders:
             self._builders.append(builder)
@@ -96,15 +105,18 @@ class Hub(Builder, Emitter, pb.Root):
     
     def _build(self, request):
         """
-        Pass along requests to my builders.
+        As a Hub, I pass build requests on to my list of Builders.
         """
         for builder in self._builders:
             builder.build(request)
-    
+
+    # ------------------------------------------------------------------------
+    # remote methods   
+    # ------------------------------------------------------------------------
     
     def remote_build(self, request):
         """
-        Just build
+        Call through to build.
         """
         self.build(request)
     
@@ -121,10 +133,8 @@ class Hub(Builder, Emitter, pb.Root):
         """
         Finds the wrapped remote builder and removes it.
         """
-        for b in list(self._builders):
-            if isinstance(b, self.remoteHubFactory):
-                if b.original == builder:
-                    self.remBuilder(b)
+        o = self.remoteHubFactory(builder)
+        self.remBuilder(o)
     
     
     def remote_getUID(self):
@@ -155,7 +165,10 @@ class Hub(Builder, Emitter, pb.Root):
         """
         wrapped = self.remoteHubFactory(observer)
         self.remObserver(wrapped)
-    
+
+    # ------------------------------------------------------------------------
+    # hub server
+    # ------------------------------------------------------------------------
     
     def getServerFactory(self):
         """
@@ -227,12 +240,6 @@ class Hub(Builder, Emitter, pb.Root):
         Called when a remote root is received as a client.
         
         In otherwords, C{self} is the client connecting to the C{remote} server.
-        
-        XXX I feel like wrapping in remoteHubFactory should only happen once...
-            but the two remote calls will make wrapping once hard on the other
-            end, unless there's a wrap function which knows about all previously
-            wrapped things and returns the same object if you call it with the
-            same Reference twice.
         """
         self.remote_addBuilder(remote)
         self.remote_addObserver(remote)

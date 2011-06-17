@@ -141,7 +141,7 @@ class HubTest(TestCase):
     
     def test_remote_addBuilder(self):
         """
-        Should wrap the remote in a RemoteHub
+        Should wrap the remote in a RemoteHub then call addBuilder
         """
         h = Hub()
         h.remoteHubFactory = FakeRemoteHub
@@ -157,15 +157,18 @@ class HubTest(TestCase):
     
     def test_remote_remBuilder(self):
         """
-        Should remove anything with original the same
+        Should wrap the remote then call remBuilder
         """
         h = Hub()
         h.remoteHubFactory = FakeRemoteHub
-        h.remote_addBuilder('foo')
-        self.assertEqual(len(h._builders), 1)
-        
+        called = []
+        h.remBuilder = called.append
         h.remote_remBuilder('foo')
-        self.assertEqual(len(h._builders), 0)
+        
+        self.assertEqual(len(called), 1)
+        r = called[0]
+        self.assertTrue(isinstance(r, FakeRemoteHub))
+        self.assertEqual(r.original, 'foo')
 
 
     def test_remote_getUID(self):
@@ -188,7 +191,7 @@ class HubTest(TestCase):
 
     def test_remote_addObserver(self):
         """
-        Should wrap the remote and add it.
+        Should wrap the remote and call addObserver
         """
         h = Hub()
         h.remoteHubFactory = FakeRemoteHub
@@ -205,7 +208,7 @@ class HubTest(TestCase):
 
     def test_remote_remObserver(self):
         """
-        Should wrap the remote and remove it.
+        Should wrap the remote and call removeObserver
         """
         h = Hub()
         h.remoteHubFactory = FakeRemoteHub
@@ -345,6 +348,8 @@ class HubTest(TestCase):
             ('addObserver', h),
         ]),
             "Should have called the remote's addBuilder and addObserver")
+        
+        self.fail('Should get uid and name')
 
 
 
@@ -437,6 +442,16 @@ class RemoteHubTest(TestCase):
         b = RemoteHub(f)
         b.buildReceived('something')
         self.assertEqual(f.called, [('buildReceived', 'something')])
+    
+    
+    def test_eq(self):
+        """
+        If my original is equal, I am equal
+        """
+        a = RemoteHub('foo')
+        b = RemoteHub('foo')
+        self.assertEqual(a, b, "They should be equal because they wrap the "
+                         "same original")
 
 
 
