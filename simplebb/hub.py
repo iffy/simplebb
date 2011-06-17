@@ -11,6 +11,7 @@ from simplebb.util import generateId
 from twisted.python import log
 
 
+
 class RemoteHub:
     """
     I wrap a Hub given over the wire so that you can interact with it
