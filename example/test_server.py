@@ -17,6 +17,11 @@ def monitor():
         len(h._builders), len(h._outgoingConns), len(h._servers))
     log.msg(txt)
 t = task.LoopingCall(monitor)
-t.start(5)
+t.start(2)
+
+def ping():
+    for b in h._builders:
+        b.getStaticInfo()
+task.LoopingCall(ping).start(2)
 
 reactor.run()

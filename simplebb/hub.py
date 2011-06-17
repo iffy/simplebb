@@ -57,6 +57,7 @@ class RemoteHub:
         """
         Remove myself from my hub's known builders and observers
         """
+        print 'disconnectMe', self, self.hub
         self.hub.remObserver(self)
         self.hub.remBuilder(self)
     
@@ -164,6 +165,7 @@ class Hub(Builder, Emitter, pb.Root):
         Wraps the remote builder in remoteHubFactory and passes it on.
         """
         o = self.remoteHubFactory(builder)
+        o.hub = self
         self.addBuilder(o)
     
     
@@ -194,6 +196,7 @@ class Hub(Builder, Emitter, pb.Root):
         Add the remote observer to my list of observers
         """
         wrapped = self.remoteHubFactory(observer)
+        wrapped.hub = self
         self.addObserver(wrapped)
 
 
@@ -283,12 +286,13 @@ class Hub(Builder, Emitter, pb.Root):
         @type remote: C{RemoteHub}
         @param remote: A C{RemoteHub} wrapped around the reference.
         """
+        remote.hub = self
         self.addBuilder(remote)
         self.addObserver(remote)
         
         remote.addBuilder(self)
         remote.addObserver(self)
-        remote.getStaticInfo()        
+        remote.getStaticInfo()
 
 
 

@@ -155,6 +155,7 @@ class HubTest(TestCase):
         r = called[0]
         self.assertTrue(isinstance(r, FakeRemoteHub))
         self.assertEqual(r.original, 'foo')
+        self.assertEqual(r.hub, h)
     
     
     def test_remote_remBuilder(self):
@@ -206,6 +207,7 @@ class HubTest(TestCase):
         observer = called[0]
         self.assertTrue(isinstance(observer, FakeRemoteHub))
         self.assertEqual(observer.original, 'foo')
+        self.assertEqual(observer.hub, h)
 
 
     def test_remote_remObserver(self):
@@ -360,6 +362,7 @@ class HubTest(TestCase):
             ('r_addO', (hub,)),
             ('r_getStaticInfo', ()),
         ]))
+        self.assertEqual(remote.hub, hub)
 
 
 
