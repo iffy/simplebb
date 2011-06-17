@@ -1,0 +1,13 @@
+#!/usr/bin/python
+
+from twisted.python.filepath import FilePath
+import sys
+
+version = sys.argv[1]
+
+dump = FilePath(__file__).parent().child('_echo')
+if not dump.exists():
+    dump.setContent('')
+
+content = dump.getContent()
+dump.setContent(content + '%s\n' % version)

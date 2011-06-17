@@ -6,3 +6,4 @@ builder.log
 *_trial_temp
 .coverage
 htmlcov
+example/projects/_echo

@@ -22,6 +22,7 @@ class ShellProtocol(LineReceiver):
 
 
     def connectionMade(self):
+        self.sendLine('Type "help" for help')
         self.showPrompt()
 
 
@@ -110,11 +111,13 @@ class ShellProtocol(LineReceiver):
             size = max(map(len, keys))
             r = '  %%%ss  %%s' % size
             
+            self.sendLine('-'*40)
             for k in keys:
                 f = c[k]
                 doc = getattr(f, '__doc__', '') or ''
                 doc = doc.strip().split('\n')[0].strip()
                 self.sendLine(r % (k, doc))
+            self.sendLine('-'*40)
         else:
             # single command
             if command not in c:
@@ -148,6 +151,15 @@ class ShellProtocol(LineReceiver):
                     self.sendLine(line[8:])
                 else:
                     self.sendLine(line)
+
+
+    def cmd_build(self, project, version):
+        """
+        Request a build.
+        """
+        request = dict(project=project, version=version, test_path=None)
+        self.hub.build(request)
+        self.sendLine('Build requested (failures not reported here)')
 
 
 

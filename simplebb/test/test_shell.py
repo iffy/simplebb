@@ -278,6 +278,37 @@ class ShellProtocolTest(TestCase):
 
 
 
+class FakeHub:
+
+
+    def __init__(self):
+        self.called = []
+
+
+    def build(self, what):
+        self.called.append(('build', what))
+
+
+
+class CommandsTest(TestCase):
+    """
+    I test specific commands
+    """
+    
+    def test_build(self):
+        s = ShellProtocol()
+        s.hub = FakeHub()
+        sendLine_called = []
+        s.sendLine = sendLine_called.append
+        
+        s.cmd_build('project', 'version')
+        
+        self.assertNotEqual(sendLine_called, [],
+            "Should have sent something back")
+        self.assertEqual(s.hub.called, [
+            ('build', dict(project='project', version='version',
+                test_path=None)),
+        ])
 
 
 
