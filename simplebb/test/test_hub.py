@@ -439,9 +439,18 @@ class RemoteHubTest(TestCase):
                          "same original")
     
     
+    def test_disconnectMe(self):
+        """
+        Disconnect this remoteHub from his hub.
+        
+        Both builder and observers
+        """
+        self.fail('the tests below reference disconnectMe.  Write it')
+
+
     def test_wrappedCallRemote(self):
         """
-        If commands succeed, nothing happens
+        If command succeed, nothing happens
         """
         f = FakeReference()
         a = RemoteHub(f)
@@ -449,10 +458,49 @@ class RemoteHubTest(TestCase):
         self.assertTrue(isinstance(d, defer.Deferred))
         f.result.callback(None)
         return d
+    
+    
+    def catchAsyncError(self, exception):
+        """
+        I test that if callRemote returns an asynchronous exception
+        """
+        ref = FakeReference()
+        hub = RemoteHub(ref)
+        
+        # fake out disconnectMe
+        hub.disconnectMe_called = []
+        def disconnectMe():
+            hub.disconnectMe_called.append(True)
+        hub.disconnectMe = disconnectMe
+
+        d = hub.wrappedCallRemote('foo')
+        self.assertTrue(isinstance(d, defer.Deferred))
+        
+        # make sure no error is returned
+        def eb(r):
+            self.fail("Should trap the error: %s" % r)
+        d.addErrback(eb)
+        
+        # cause error
+        ref.result.errback(exception)
+        
+        self.assertEqual(hub.disconnectMe_called, [True],
+            "disconnectMe should be called")
+        return d
 
 
+    def test_wrappedCallRemote_DeadReferenceError(self):
+        """
+        If a DeadReferenceError is raised, call disconnectMe
+        """
+        return self.catchAsyncError(pb.DeadReferenceError())
 
 
+    def test_wrappedCallRemote_PBConnectionLost(self):
+        """
+        If the connection is lost, call disconnectMe
+        """
+        return self.catchAsyncError(pb.PBConnectionLost())
 
 
 

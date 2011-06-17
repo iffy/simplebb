@@ -42,7 +42,11 @@ class RemoteHub:
         I catch callRemote's exceptions and disconnect myself from the hub
         if the remote side disconnected.
         """
+        def eb(result):
+            result.trap(pb.DeadReferenceError, pb.PBConnectionLost)
+            self.disconnectMe()
         result = self.original.callRemote(*args)
+        result.addErrback(eb)
         return result
 
 
