@@ -211,19 +211,20 @@ class Hub(Builder, Emitter, pb.Root):
     # hub server
     # ------------------------------------------------------------------------
     
-    def getServerFactory(self):
+    def getPBServerFactory(self):
         """
         Return a PBServerFactory for listening for connections.
         """
         return pb.PBServerFactory(self)
     
     
-    def startServer(self, description):
+    def startServer(self, factory, description):
         """
         Start a PB Server with the given endpoint description string
+        
+        @param factory: The Factory to use to start the server.
         """
         server = endpoints.serverFromString(reactor, description)
-        factory = self.getServerFactory()
         
         def getServer(server, description):
             self._servers[description] = server
