@@ -1,9 +1,39 @@
 from twisted.trial.unittest import TestCase
 from twisted.protocols.basic import LineReceiver
+from twisted.internet.protocol import Factory
 
 
-from simplebb.shell import ShellProtocol
+from simplebb.shell import ShellProtocol, ShellFactory
 
+
+
+class ShellFactoryTest(TestCase):
+
+
+    def test_hub(self):
+        """
+        Should accept a hub
+        """
+        f = ShellFactory('foo')
+        self.assertEqual(f.hub, 'foo')
+
+
+    def test_Factory(self):
+        self.assertTrue(issubclass(ShellFactory, Factory))
+    
+    
+    def test_protocol(self):
+        self.assertEqual(ShellFactory.protocol, ShellProtocol)
+
+    
+    def test_buildProtocol(self):
+        """
+        Should pass the hub along
+        """
+        f = ShellFactory('hub')
+        p = f.buildProtocol('whatever')
+        self.assertEqual(p.hub, 'hub')
+        
 
 
 class ShellProtocolTest(TestCase):
@@ -19,6 +49,13 @@ class ShellProtocolTest(TestCase):
         """
         self.assertTrue(issubclass(ShellProtocol, LineReceiver))
     
+    
+    def test_attrs(self):
+        """
+        A ShellProtocol should know about some things
+        """
+        self.assertEqual(self.s.hub, None)
+
     
     def t(self, i, expected_output):
         s = ShellProtocol()
@@ -40,36 +77,6 @@ class ShellProtocolTest(TestCase):
     
     def test_parse_doublequote(self):
         self.t('foo "bar baz " hey', ['foo', 'bar baz ', 'hey'])
-    
-    
-    def test_cmd_build(self):
-        """
-        build just passes on through
-        """
-        called = []
-        
-        class FakeBrain:
-        
-            def buildProject(self, project, version, test=None):
-                called.append((project, version, test))
-                
-        class FakeFactory: pass
-
-
-        factory = FakeFactory()
-        factory.brain = FakeBrain()
-        
-        s = ShellProtocol()
-        s.factory = factory
-        
-        s.cmd_build('foo', 'bar')
-        self.assertEqual(len(called), 1)
-        self.assertEqual(called[0], ('foo', 'bar', None))
-        
-        called.pop()
-        s.cmd_build('foo', 'bar', 'test1')
-        self.assertEqual(len(called), 1)
-        self.assertEqual(called[0], ('foo', 'bar', 'test1'))
     
     
     def test_getCommands(self):

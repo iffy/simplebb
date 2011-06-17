@@ -3,7 +3,7 @@ import shlex
 
 from twisted.protocols.basic import LineReceiver
 from twisted.python import log
-
+from twisted.internet.protocol import Factory
 
 
 
@@ -13,6 +13,8 @@ class ShellProtocol(LineReceiver):
     """
     
     _commands = None
+    
+    hub = None
 
 
     def showPrompt(self):
@@ -88,13 +90,6 @@ class ShellProtocol(LineReceiver):
         self.transport.loseConnection()
     
     
-    def cmd_build(self, project, version, test=None):
-        """
-        Request a build.
-        """
-        self.factory.brain.buildProject(project, version, test)
-    
-    
     def cmd_help(self, command=None):
         """
         Display this help (type "help help" for more help)
@@ -153,6 +148,32 @@ class ShellProtocol(LineReceiver):
                     self.sendLine(line[8:])
                 else:
                     self.sendLine(line)
+
+
+
+class ShellFactory(Factory):
+    """
+    I hook a ShellProtocol to a Hub
+    """
+
+    protocol = ShellProtocol
+
+
+    def __init__(self, hub):
+        self.hub = hub
+    
+    
+    def buildProtocol(self, addr):
+        """
+        Builds the protocol
+        """
+        p = Factory.buildProtocol(self, addr)
+        p.hub = self.hub
+        return p
+
+
+
+
 
 
 

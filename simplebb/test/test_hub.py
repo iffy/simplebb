@@ -567,3 +567,13 @@ class RemoteHubTest(TestCase):
         self.assertEqual(hub.disconnectMe_called, [True])
 
 
+
+class HubShellTest(TestCase):
+    """
+    I test the shell aspects of the Hub
+    """
+    
+    def test_startShell(self):
+        """
+        
+        """
