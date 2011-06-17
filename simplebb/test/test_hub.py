@@ -8,6 +8,7 @@ from twisted.spread import pb
 from simplebb.interface import IBuilder, IEmitter, IObserver, IBuilderHub
 from simplebb.hub import Hub, RemoteHub
 from simplebb.builder import Builder
+from simplebb.shell import ShellFactory
 
 
 
@@ -235,6 +236,16 @@ class HubTest(TestCase):
         f = h.getPBServerFactory()
         self.assertTrue(isinstance(f, pb.PBServerFactory))
         self.assertEqual(f.root, h)
+    
+    
+    def test_getShellServerFactory(self):
+        """
+        Should return an instance of hub.shell.ShellFactory
+        """
+        h = Hub()
+        f = h.getShellServerFactory()
+        self.assertTrue(isinstance(f, ShellFactory))
+        self.assertEqual(f.hub, h)
     
     
     def test_startServer(self):

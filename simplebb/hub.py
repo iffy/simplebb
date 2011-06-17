@@ -7,6 +7,7 @@ from simplebb.interface import IBuilder, IEmitter, IObserver, IBuilderHub
 from simplebb.report import Emitter
 from simplebb.builder import Builder
 from simplebb.util import generateId
+from simplebb.shell import ShellFactory
 
 from twisted.python import log
 
@@ -216,6 +217,13 @@ class Hub(Builder, Emitter, pb.Root):
         Return a PBServerFactory for listening for connections.
         """
         return pb.PBServerFactory(self)
+    
+    
+    def getShellServerFactory(self):
+        """
+        Return a L{ShellFactory} instance hooked up to me.
+        """
+        return ShellFactory(self)
     
     
     def startServer(self, factory, description):
