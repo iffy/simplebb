@@ -441,11 +441,18 @@ class RemoteHubTest(TestCase):
     
     def test_disconnectMe(self):
         """
-        Disconnect this remoteHub from his hub.
-        
-        Both builder and observers
+        Disconnect this remoteHub from his hub.  Does nothing right now
         """
-        self.fail('the tests below reference disconnectMe.  Write it')
+        a = RemoteHub('foo')
+        a.disconnectMe()
+    
+    
+    def test_disconnectMe_real(self):
+        """
+        Remove from observers and from builders
+        """
+        self.fail('hey')
+    test_disconnectMe_real.todo = 'Do this'
 
 
     def test_wrappedCallRemote(self):
@@ -502,5 +509,27 @@ class RemoteHubTest(TestCase):
         """
         return self.catchAsyncError(pb.PBConnectionLost())
 
+
+    def test_wrappedCallRemote_syncConnLost(self):
+        """
+        If the connection is lost and the error is raised synchronously by
+        callRemote, call disconnectMe
+        """
+        ref = FakeReference()
+        hub = RemoteHub(ref)
+        
+        # fake out disconnectMe
+        hub.disconnectMe_called = []
+        def disconnectMe():
+            hub.disconnectMe_called.append(True)
+        hub.disconnectMe = disconnectMe
+        
+        # fake the error
+        def bad(*args):
+            raise pb.PBConnectionLost('oh no')
+        ref.callRemote = bad
+        
+        hub.wrappedCallRemote('foo')
+        self.assertEqual(hub.disconnectMe_called, [True])
 
 

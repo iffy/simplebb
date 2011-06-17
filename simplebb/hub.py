@@ -45,9 +45,18 @@ class RemoteHub:
         def eb(result):
             result.trap(pb.DeadReferenceError, pb.PBConnectionLost)
             self.disconnectMe()
-        result = self.original.callRemote(*args)
-        result.addErrback(eb)
-        return result
+        try:
+            result = self.original.callRemote(*args)
+            result.addErrback(eb)
+            return result
+        except Exception, e:
+            self.disconnectMe()
+    
+    
+    def disconnectMe(self):
+        """
+        Remove myself from my hub's known builders and observers
+        """
 
 
     def build(self, request):
