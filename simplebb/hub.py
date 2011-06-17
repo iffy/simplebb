@@ -141,6 +141,22 @@ class Hub(Builder, Emitter, pb.Root):
         return self.name
     
     
+    def remote_addObserver(self, observer):
+        """
+        Add the remote observer to my list of observers
+        """
+        wrapped = self.remoteHubFactory(observer)
+        self.addObserver(wrapped)
+
+
+    def remote_removeObserver(self, observer):
+        """
+        Add the remote observer to my list of observers
+        """
+        wrapped = self.remoteHubFactory(observer)
+        self.removeObserver(wrapped)
+    
+    
     def getServerFactory(self):
         """
         Return a PBServerFactory for listening for connections.
@@ -211,6 +227,12 @@ class Hub(Builder, Emitter, pb.Root):
         Called when a remote root is received as a client.
         
         In otherwords, C{self} is the client connecting to the C{remote} server.
+        
+        XXX I feel like wrapping in remoteHubFactory should only happen once...
+            but the two remote calls will make wrapping once hard on the other
+            end, unless there's a wrap function which knows about all previously
+            wrapped things and returns the same object if you call it with the
+            same Reference twice.
         """
         self.remote_addBuilder(remote)
         self.remote_addObserver(remote)

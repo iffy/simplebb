@@ -23,10 +23,12 @@ class FakeReference:
         self.called.append(args)
 
 
+
 class FakeRemoteHub:
     
     def __init__(self, original):
         self.original = original
+
 
 
 class HubTest(TestCase):
@@ -186,14 +188,36 @@ class HubTest(TestCase):
 
     def test_remote_addObserver(self):
         """
-        Should wrap the remote (again!?) and add it.
+        Should wrap the remote and add it.
         """
         h = Hub()
-        self.fail('Write me. I am easy')
+        h.remoteHubFactory = FakeRemoteHub
+        called = []
+        h.addObserver = called.append
+        
+        h.remote_addObserver('foo')
+        
+        self.assertEqual(len(called), 1)
+        observer = called[0]
+        self.assertTrue(isinstance(observer, FakeRemoteHub))
+        self.assertEqual(observer.original, 'foo')
 
 
     def test_remote_removeObserver(self):
-        self.fail('Write me. I am easy')
+        """
+        Should wrap the remote and remove it.
+        """
+        h = Hub()
+        h.remoteHubFactory = FakeRemoteHub
+        called = []
+        h.removeObserver = called.append
+        
+        h.remote_removeObserver('foo')
+        
+        self.assertEqual(len(called), 1)
+        observer = called[0]
+        self.assertTrue(isinstance(observer, FakeRemoteHub))
+        self.assertEqual(observer.original, 'foo')
 
 
     def test_getServerFactory(self):
