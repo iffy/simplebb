@@ -47,3 +47,25 @@ Quick Start
     Hello, world!
     another
 
+
+How is it different than BuildBot?
+==================================
+
+Everything is a builder
+-----------------------
+
+The server is a builder, the client is a builder, the build-step executer is a
+builder.  Some builders simply pass on build requests to other builders.  Others
+execute scripts.  You can write your own builders.
+
+
+It's distributed
+----------------
+
+If you connect a builder to a receive build requests from a remote builder,
+the local builder is responsible for acquiring code and defining build steps.
+You can report the results to the remote builder but you don't have to. If 
+you're in QA, you could make a builder that fails every build.
+
+
+
