@@ -48,8 +48,8 @@ Quick Start
     another
 
 
-How is it different than BuildBot?
-==================================
+What makes simplebb cool?
+=========================
 
 Everything is a builder
 -----------------------
