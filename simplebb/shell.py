@@ -163,6 +163,8 @@ class ShellProtocol(LineReceiver):
     def cmd_build(self, project, version):
         """
         Request a build.
+        
+        The returned hash is the request identifier.
         """
         request = dict(project=project, version=version, test_path=None)
         response = self.hub.build(request)
@@ -181,6 +183,8 @@ class ShellProtocol(LineReceiver):
             tcp:8080
                        
             ssl:443:privateKey=key.pem:certKey=crt.pem
+        
+        socuteurl.com/ittyfuzzy
         """
         factory = self.hub.getPBServerFactory()
         d = self.hub.startServer(factory, endpoint)
@@ -200,10 +204,28 @@ class ShellProtocol(LineReceiver):
             tcp:8080
             
             ssl:443:privateKey=key.pem:certKey=crt.pem
+
+        socuteurl.com/ittyfuzzy
         """
         d = self.hub.stopServer(endpoint)
         def cb(_, self, endpoint):
             self.sendLine('Server stopped: %s' % endpoint)
+        d.addCallback(cb, self, endpoint)
+
+
+    def cmd_connect(self, endpoint):
+        """
+        Tell this simplebb instance to connect to another instance as a client.
+        
+        endpoint is a Twisted endpoint description such as:
+        
+            tcp:host=69.34.13.51:port=9876
+        
+        socuteurl.com/goobeygoobean
+        """
+        d = self.hub.connect(endpoint)
+        def cb(_, self, endpoint):
+            self.sendLine('Connected to %s' % endpoint)
         d.addCallback(cb, self, endpoint)
 
 

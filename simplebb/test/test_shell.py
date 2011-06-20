@@ -305,6 +305,11 @@ class FakeHub:
     def stopServer(self, description):
         self.called.append(('stopServer', description))
         return self.returns.get('stopServer', None)
+    
+    
+    def connect(self, description):
+        self.called.append(('connect', description))
+        return self.returns.get('connect', None)
         
 
 
@@ -372,6 +377,27 @@ class CommandsTest(TestCase):
         
         stop_d.callback('foo')
         self.assertNotEqual(sendLine, [], "Once server stops, connectee "
+                            "should be notified.")
+
+
+    def test_connect(self):
+        """
+        should go through to hub.connect
+        """
+        shell = ShellProtocol()
+        client = defer.Deferred()
+        shell.hub = FakeHub(connect=client)
+        sendLine = []
+        shell.sendLine = sendLine.append
+        
+        shell.cmd_connect('my endpoint')
+        
+        while sendLine:
+            sendLine.pop()
+        self.assertIn(('connect', 'my endpoint'), shell.hub.called)
+        
+        client.callback('foo')
+        self.assertNotEqual(sendLine, [], "Once client connects, connectee "
                             "should be notified.")
         
 
