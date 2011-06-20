@@ -70,12 +70,17 @@ class ShellProtocol(LineReceiver):
         """
         c = self.getCommands()
         try:
-            r = c[cmd](*args)
-            self.showPrompt()
-            return r
+            method = c[cmd]
         except KeyError, e:
             log.msg(e)
             self.sendLine('No command named %s.  Type help' % cmd)
+            self.showPrompt()
+            return False
+
+        try:
+            r = method(*args)
+            self.showPrompt()
+            return r
         except TypeError, e:
             log.msg(e)
             self.sendLine('Error trying to run command.  Type help %s' % cmd)
@@ -141,6 +146,7 @@ class ShellProtocol(LineReceiver):
                 else:
                     args.append(arg)
             args.reverse()
+            self.sendLine('-'*40)
             self.sendLine('usage: %s' % ' '.join([command] + args))
             
             # help
@@ -151,6 +157,7 @@ class ShellProtocol(LineReceiver):
                     self.sendLine(line[8:])
                 else:
                     self.sendLine(line)
+            self.sendLine('-'*40)
 
 
     def cmd_build(self, project, version):
@@ -178,9 +185,26 @@ class ShellProtocol(LineReceiver):
         factory = self.hub.getPBServerFactory()
         d = self.hub.startServer(factory, endpoint)
         
-        def cb(_):
-            self.sendLine('Server started')
-        d.addCallback(cb)
+        def cb(_, self, endpoint):
+            self.sendLine('Server started: %s' % endpoint)
+        d.addCallback(cb, self, endpoint)
+    
+    
+    def cmd_stop(self, endpoint):
+        """
+        Stop a simplebb server that other simplebb instance connect to.
+        
+        The endpoint argument is a Twisted endpoint description (the same
+        thing used in the "start" command) such as:
+        
+            tcp:8080
+            
+            ssl:443:privateKey=key.pem:certKey=crt.pem
+        """
+        d = self.hub.stopServer(endpoint)
+        def cb(_, self, endpoint):
+            self.sendLine('Server stopped: %s' % endpoint)
+        d.addCallback(cb, self, endpoint)
 
 
 
