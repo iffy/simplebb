@@ -30,7 +30,8 @@ class BuilderTest(TestCase):
             'version': 'bar',
         }
         b = Builder()
-        b.build(r)
+        ret = b.build(r)
+        self.assertEqual(ret, r, "Should return the filled-out build request")
     
     
     def test_build_uid(self):

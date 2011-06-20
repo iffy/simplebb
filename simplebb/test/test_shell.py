@@ -1,6 +1,7 @@
 from twisted.trial.unittest import TestCase
 from twisted.protocols.basic import LineReceiver
 from twisted.internet.protocol import Factory
+from twisted.internet import defer
 
 
 from simplebb.shell import ShellProtocol, ShellFactory
@@ -281,13 +282,25 @@ class ShellProtocolTest(TestCase):
 class FakeHub:
 
 
-    def __init__(self):
+    def __init__(self, **returns):
         self.called = []
+        self.returns = returns
 
 
     def build(self, what):
         self.called.append(('build', what))
-
+        return self.returns.get('build', None)
+    
+    
+    def getPBServerFactory(self):
+        self.called.append('getPBServerFactory')
+        return self.returns.get('getPBServerFactory', None)
+    
+    
+    def startServer(self, factory, description):
+        self.called.append(('startServer', factory, description))
+        return self.returns.get('startServer', None)
+        
 
 
 class CommandsTest(TestCase):
@@ -297,7 +310,8 @@ class CommandsTest(TestCase):
     
     def test_build(self):
         s = ShellProtocol()
-        s.hub = FakeHub()
+        build_response = {'uid': 'something'}
+        s.hub = FakeHub(build=build_response)
         sendLine_called = []
         s.sendLine = sendLine_called.append
         
@@ -305,11 +319,35 @@ class CommandsTest(TestCase):
         
         self.assertNotEqual(sendLine_called, [],
             "Should have sent something back")
+        self.assertTrue('something' in sendLine_called[0],
+            "Should include the build request uid in the response")
         self.assertEqual(s.hub.called, [
             ('build', dict(project='project', version='version',
                 test_path=None)),
         ])
 
+
+    def test_start(self):
+        """
+        start should go through to startServer
+        """
+        shell = ShellProtocol()
+        factory = object()
+        server = defer.Deferred()
+        shell.hub = FakeHub(getPBServerFactory=factory, startServer=server)
+        sendLine = []
+        shell.sendLine = sendLine.append
+        
+        shell.cmd_start('tcp:8080')
+        
+        while sendLine:
+            sendLine.pop()
+        self.assertIn(('startServer', factory, 'tcp:8080'), shell.hub.called)
+        
+        server.callback('foo')
+        self.assertNotEqual(sendLine, [], "Once server starts, connectee "
+                            "should be notified.")
+        
 
 
 

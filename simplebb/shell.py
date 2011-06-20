@@ -158,8 +158,29 @@ class ShellProtocol(LineReceiver):
         Request a build.
         """
         request = dict(project=project, version=version, test_path=None)
-        self.hub.build(request)
-        self.sendLine('Build requested (failures not reported here)')
+        response = self.hub.build(request)
+        self.sendLine('Build requested: %s' % response['uid'])
+    
+    
+    def cmd_start(self, endpoint):
+        """
+        Start a simplebb server for other simplebb instances to connect to.
+        
+        Other instances can connect to this server by using the connect
+        command.
+        
+        The only argument is a Twisted endpoint description such as:
+        
+            tcp:8080
+                       
+            ssl:443:privateKey=key.pem:certKey=crt.pem
+        """
+        factory = self.hub.getPBServerFactory()
+        d = self.hub.startServer(factory, endpoint)
+        
+        def cb(_):
+            self.sendLine('Server started')
+        d.addCallback(cb)
 
 
 

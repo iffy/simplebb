@@ -40,6 +40,8 @@ class Builder:
         if request['uid'] not in self._pastRequestIds:
             self._pastRequestIds.add(request['uid'])
             self._build(request)
+        
+        return request
     
     
     def _build(self, request):
