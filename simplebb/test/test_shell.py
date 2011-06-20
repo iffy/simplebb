@@ -310,6 +310,12 @@ class FakeHub:
     def connect(self, description):
         self.called.append(('connect', description))
         return self.returns.get('connect', None)
+
+
+    def disconnect(self, description):
+        self.called.append(('disconnect', description))
+        return self.returns.get('disconnect', None)
+
         
 
 
@@ -399,9 +405,21 @@ class CommandsTest(TestCase):
         client.callback('foo')
         self.assertNotEqual(sendLine, [], "Once client connects, connectee "
                             "should be notified.")
+
+
+    def test_disconnect(self):
+        """
+        should go through to hub.disconnect
+        """
+        shell = ShellProtocol()
+        stop_d = defer.Deferred()
+        shell.hub = FakeHub(disconnect=stop_d)
+        sendLine = []
+        shell.sendLine = sendLine.append
         
-
-
+        shell.cmd_disconnect('tcp:8080')
+    
+        self.assertIn(('disconnect', 'tcp:8080'), shell.hub.called)
 
 
 

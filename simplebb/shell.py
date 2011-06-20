@@ -93,6 +93,11 @@ class ShellProtocol(LineReceiver):
     
     
     def cmd_quit(self):
+        """
+        Make like a tree
+        
+        ...and leave
+        """
         self.transport.loseConnection()
     
     
@@ -227,6 +232,21 @@ class ShellProtocol(LineReceiver):
         def cb(_, self, endpoint):
             self.sendLine('Connected to %s' % endpoint)
         d.addCallback(cb, self, endpoint)
+    
+    
+    def cmd_disconnect(self, endpoint):
+        """
+        Tell this simplebb instance to disconnect from another instance.
+        
+        A prior "connect" command should have been issued.
+        
+        endpoint is a Twisted endpoint description such as:
+        
+            tcp:host=69.34.13.51:port=9876
+        
+        socuteurl.com/goobeygoobean
+        """
+        self.hub.disconnect(endpoint)
 
 
 
