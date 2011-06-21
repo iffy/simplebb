@@ -1,4 +1,9 @@
 #!/usr/bin/python
+"""
+I build things by writing "built VERSION" in a file
+named _echo
+"""
+
 
 from twisted.python.filepath import FilePath
 import sys
@@ -10,4 +15,4 @@ if not dump.exists():
     dump.setContent('')
 
 content = dump.getContent()
-dump.setContent(content + '%s\n' % version)
+dump.setContent(content + 'built echo project version %s\n' % version)

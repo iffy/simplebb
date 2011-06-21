@@ -19,33 +19,33 @@ Quick Start
 
     $ easy_install Twisted
 
-3. Start a sample ``simplebb`` server::
-    
-    $ cd simplebb.git
-    $ PYTHONPATH=. python example/server.py
-
-4. See the build script that will take what ever version you want to build
+3. See the build script that will take what ever version you want to build
    and append that version to ``example/project/_echo``::
 
     $ cat example/project/echo
 
-5. Telnet to the server::
+4. Start a sample ``simplebb`` server::
+    
+    $ cd simplebb.git
+    $ PYTHONPATH=. python example/server.py
+
+5. From another terminal, telnet to the server::
 
     $ telnet 127.0.0.1 9223
 
 6. Request some builds of the ``echo`` project::
 
     > build echo "Hello, world!"
-    Build requested (failures not reported here)
-    > build echo "another"
-    Build requested (failures not reported here)
+    Build requested: 2fa067baeec87928717906efdba550e26d6d0ee8fbc727db1a2f7a7d896283cf
+    > build echo another  
+    Build requested: 6ec610b90b7a60cfd1f0b8d8d393d657bbc535e65885282c9bb9f01735110769
     > quit
 
 7. See that the build script was run::
 
     $ cat example/projects/_echo 
-    Hello, world!
-    another
+    built echo project version Hello, world!
+    built echo project version another
 
 
 What makes simplebb cool?
@@ -56,7 +56,7 @@ Everything is a builder
 
 The server is a builder, the client is a builder, the build-step executer is a
 builder.  Some builders simply pass on build requests to other builders.  Others
-execute scripts.  You can write your own builders.
+execute scripts.
 
 
 It's distributed
