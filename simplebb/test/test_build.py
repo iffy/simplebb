@@ -33,6 +33,7 @@ class BuildTest(TestCase):
         """
         b = Build()
         self.assertNotEqual(b.uid, None)
+        self.assertTrue(b.uid.startswith('Build-'))
         self.assertEqual(b.status, None)
         self.assertEqual(b.version, None)
         self.assertEqual(b.project, None)

@@ -34,7 +34,7 @@ class Build:
     
     def __init__(self):
         self.done = defer.Deferred()
-        self.uid = generateId()
+        self.uid = self.__class__.__name__ + '-' + generateId()
     
     
     def _finish(self, status):

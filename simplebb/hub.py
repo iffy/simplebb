@@ -96,8 +96,8 @@ class RemoteHub:
         self.wrappedCallRemote('addObserver', observer)
 
 
-    def buildReceived(self, buildDict):
-        self.wrappedCallRemote('buildReceived', buildDict)
+    def noteReceived(self, buildDict):
+        self.wrappedCallRemote('noteReceived', buildDict)
 
 
 
@@ -119,12 +119,14 @@ class Hub(Builder, Emitter, pb.Root):
         self._outgoingConns = {}
 
     
-    def buildReceived(self, buildDict):
+    def noteReceived(self, note):
         """
         Called by Emitters that I am observing to indicate that something
-        interesting has happened with this build.
+        interesting has happened with a build.
+        
+        I am a L{Hub}, so I simply pass the notification along to my observers.
         """
-        self.emit(buildDict)
+        self.emit(note)
 
 
     def addBuilder(self, builder):

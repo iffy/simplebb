@@ -24,7 +24,7 @@ class Builder:
     name = 'Builder'
     
     def __init__(self):
-        self.uid = generateId()
+        self.uid = '%s-%s' % (self.__class__.__name__, generateId())
         self._pastRequestIds = set([])
 
 
@@ -57,10 +57,6 @@ class FileBuilder(Builder, Emitter):
     """
     
     implements(IBuilder)
-    
-    name = None
-    
-    uid = None
     
     path = None
 

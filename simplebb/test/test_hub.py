@@ -78,14 +78,14 @@ class HubTest(TestCase):
         self.assertEqual(Hub.remoteHubFactory, RemoteHub)
     
     
-    def test_buildReceived(self):
+    def test_noteReceived(self):
         """
         Should just call emit
         """
         h = Hub()
         called = []
         h.emit = called.append
-        h.buildReceived('something')
+        h.noteReceived('something')
         self.assertEqual(called, ['something'])
     
     
@@ -465,8 +465,8 @@ class RemoteHubTest(TestCase):
         self.tr('addObserver', 'something')
     
     
-    def test_buildReceived(self):
-        self.tr('buildReceived', 'something')
+    def test_noteReceived(self):
+        self.tr('noteReceived', 'something')
     
     
     def test_eq(self):

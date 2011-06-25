@@ -19,6 +19,7 @@ class BuilderTest(TestCase):
     def test_uid(self):
         b = Builder()
         self.assertNotEqual(b.uid, None)
+        self.assertTrue(b.uid.startswith('Builder-'), b.uid)
     
     
     def test_build_basic(self):

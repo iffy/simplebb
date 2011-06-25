@@ -55,7 +55,7 @@ class IBuild(Interface):
     
     def toDict():
         """
-        Convert this Build into a transportable dict.
+        Convert this Build into a transportable dict
         """
 
 
@@ -106,9 +106,9 @@ class IObserver(Interface):
     I observe interesting notifications about builds.
     """
     
-    def buildReceived(buildDict):
+    def noteReceived(note):
         """
-        Called with a Build dictionary.
+        Called with a note dictionary.
         """
 
 
