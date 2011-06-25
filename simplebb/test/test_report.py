@@ -46,11 +46,11 @@ class EmitterTest(TestCase):
     
     def test_emit(self):
         """
-        Should call each observers buildReceived method.
+        Should call each observers noteReceived method.
         """        
         class FakeObserver:
-            def buildReceived(self, buildDict):
-                self.build = buildDict
+            def noteReceived(self, note):
+                self.note = note
         
         e = Emitter()
         
@@ -58,9 +58,10 @@ class EmitterTest(TestCase):
         for o in observers:
             e.addObserver(o)
         
+        d = {'uid':'something'}
         
-        e.emit('something')
-        self.assertEqual([x.build for x in observers], ['something', 'something'])
+        e.emit(d)
+        self.assertEqual([x.note for x in observers], [d, d])
     
     
     def test_emit_repeat(self):
@@ -68,22 +69,23 @@ class EmitterTest(TestCase):
         The same message should not be emitted twice
         """
         class FakeObserver:
-            def buildReceived(self, buildDict):
-                self.build = buildDict
+            def noteReceived(self, note):
+                self.note = note
         
         e = Emitter()
         o = FakeObserver()
         e.addObserver(o)
         
-        r = dict(project='foo')
+        note = dict(uid='1234')
         
-        e.emit(r)
-        self.assertEqual(o.build, r)
+        e.emit(note)
+        self.assertEqual(o.note, note)
         
-        o.build = None
-        e.emit(r)
-        self.assertEqual(o.build, None,
+        o.note = None
+        e.emit(note)
+        self.assertEqual(o.note, None,
             "Should not have passed the report on because it was already"
-            "received: %r" % r)
+            "received: %r" % note)
+
 
 
