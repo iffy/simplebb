@@ -7,6 +7,7 @@ named _echo
 
 from twisted.python.filepath import FilePath
 import sys
+import time
 
 version = sys.argv[1]
 
@@ -16,3 +17,5 @@ if not dump.exists():
 
 content = dump.getContent()
 dump.setContent(content + 'built echo project version %s\n' % version)
+
+time.sleep(1)

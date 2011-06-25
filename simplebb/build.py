@@ -63,7 +63,8 @@ class Build:
             project=self.project,
             version=self.version,
             test_path=self.test_path,
-            runtime=self.runtime)
+            runtime=self.runtime,
+            req_uid=self.req_uid)
         uid = 'note-' + generateId()
         return {
             'uid':uid,

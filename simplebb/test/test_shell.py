@@ -3,8 +3,11 @@ from twisted.protocols.basic import LineReceiver
 from twisted.internet.protocol import Factory
 from twisted.internet import defer
 
+from zope.interface.verify import verifyClass
+
 
 from simplebb.shell import ShellProtocol, ShellFactory
+from simplebb.interface import IObserver
 
 
 
@@ -50,6 +53,13 @@ class ShellProtocolTest(TestCase):
         """
         self.assertTrue(issubclass(ShellProtocol, LineReceiver))
     
+    
+    def test_Observer(self):
+        """
+        Should be an observer
+        """
+        verifyClass(IObserver, ShellProtocol)
+
     
     def test_attrs(self):
         """
@@ -277,6 +287,32 @@ class ShellProtocolTest(TestCase):
         s.cmd_quit()
         self.assertEqual(called, [True])
 
+
+    def test_watchRequest(self):
+        """
+        You should be able to watch request info.
+        """
+        s = ShellProtocol()
+        s.watchRequest('abcdef')
+        self.assertEqual(s.watching, ['abcdef'])
+
+
+    def test_noteReceived(self):
+        """
+        If the user previously called watchRequest with the given request id,
+        send it to the user.
+        """
+        s = ShellProtocol()
+        s.watching = ['abcdef']
+        called = []
+        s.sendLine = called.append
+        
+        note = {'build': {'req_uid': 'abcdef'}, 'note': 'Some note'}
+        
+        s.noteReceived(note)
+        self.assertEqual(len(called), 1)
+        self.assertTrue('Some note' in called[0])
+        
 
 
 class FakeHub:

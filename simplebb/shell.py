@@ -4,6 +4,9 @@ import shlex
 from twisted.protocols.basic import LineReceiver
 from twisted.python import log
 from twisted.internet.protocol import Factory
+from zope.interface import implements
+
+from simplebb.interface import IObserver
 
 
 
@@ -12,9 +15,15 @@ class ShellProtocol(LineReceiver):
     I am the protocol used when connecting via a terminal interface.
     """
     
+    implements(IObserver)
+    
     _commands = None
     
     hub = None
+
+
+    def __init__(self):
+        self.watching = []
 
 
     def showPrompt(self):
@@ -36,6 +45,20 @@ class ShellProtocol(LineReceiver):
         if data == '\x04':
             self.transport.loseConnection()
 
+
+    def watchRequest(self, uid):
+        """
+        Register a request uid that you want to receive notifications about.
+        """
+        self.watching.append(uid)
+
+
+    def noteReceived(self, note):
+        """
+        A note has been received
+        """
+        self.sendLine(note['note'])
+        
 
     def parseCmd(self, s):
         """

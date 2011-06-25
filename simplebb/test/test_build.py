@@ -99,6 +99,7 @@ class BuildTest(TestCase):
         b.project = 'project'
         b.version = 'version'
         b.test_path = 'foo/bar'
+        b.req_uid = 'req_uid'
         b.runtime = 203
         
         d = b.makeNote()
@@ -111,7 +112,8 @@ class BuildTest(TestCase):
         self.assertTrue('build' in d, d.keys())
         self.assertEqual(d['build'], dict(
             uid='something', status=10, project='project',
-            version='version', test_path='foo/bar', runtime=203))
+            version='version', test_path='foo/bar', runtime=203,
+            req_uid='req_uid'))
         
         self.assertEqual(d['note'], None)
         
