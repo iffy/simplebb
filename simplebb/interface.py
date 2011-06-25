@@ -53,9 +53,9 @@ class IBuild(Interface):
         """
     
     
-    def toDict():
+    def makeNote():
         """
-        Convert this Build into a transportable dict
+        Convert this Build into a transportable note dictionary.
         """
 
 

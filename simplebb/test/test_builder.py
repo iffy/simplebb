@@ -44,6 +44,7 @@ class BuilderTest(TestCase):
         
         b.build(r)
         self.assertNotEqual(r['uid'], None)
+        self.assertTrue(r['uid'].startswith('req-'), r['uid'])
         
         uid = r['uid']
         
@@ -308,8 +309,8 @@ class FileBuilderTest(TestCase):
             - get the results of findBuilds,
             - set the version attribute of each Build,
             - call run() on each Build,
-            - pass each Build.toDict through emit
-            - wait on the Build's completion to send the finished build.toDict
+            - pass each Build.makeNote through emit
+            - wait on the Build's completion to send the finished build.makeNote
               through emit.
         """
         b = FileBuilder('foo')
@@ -340,8 +341,13 @@ class FileBuilderTest(TestCase):
         self.assertEqual(run_called, [True],
             "Build.run() should have been called")
         
-        self.assertEqual(emit_called, [r[0].toDict()],
+        
+        expected_note = r[0].makeNote('start')
+        self.assertEqual(len(emit_called), 1,
             "Builder.emit() should have been called")
+        self.assertEqual(emit_called[0]['note'], 'start',
+            "Should emit the note 'start'")
+        self.assertEqual(emit_called[0]['build'], expected_note['build'])
         
         # reset the fake
         emit_called.pop()
@@ -349,8 +355,12 @@ class FileBuilderTest(TestCase):
         # finish the build manually.
         r[0].done.callback(r[0])
         
-        self.assertEqual(emit_called, [r[0].toDict()],
+        expected_note = r[0].makeNote('done')
+        self.assertEqual(len(emit_called), 1,
             "When the build finishes, Builder.emit should be called")
+        self.assertEqual(emit_called[0]['note'], 'done',
+            "Should emit the note 'done'")
+        self.assertEqual(emit_called[0]['build'], expected_note['build'])
 
 
 

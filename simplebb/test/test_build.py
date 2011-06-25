@@ -89,7 +89,7 @@ class BuildTest(TestCase):
         return b.done
 
 
-    def test_toDict(self):
+    def test_makeNote(self):
         """
         Should read all the required attributes.
         """
@@ -100,9 +100,24 @@ class BuildTest(TestCase):
         b.version = 'version'
         b.test_path = 'foo/bar'
         b.runtime = 203
-        self.assertEqual(b.toDict(), dict(
+        
+        d = b.makeNote()
+        
+        # uid
+        self.assertTrue('uid' in d, d.keys())
+        self.assertTrue(d['uid'].startswith('note-'))
+        
+        # build
+        self.assertTrue('build' in d, d.keys())
+        self.assertEqual(d['build'], dict(
             uid='something', status=10, project='project',
             version='version', test_path='foo/bar', runtime=203))
+        
+        self.assertEqual(d['note'], None)
+        
+        d = b.makeNote('foomanchoo')
+        # note
+        self.assertEqual(d['note'], 'foomanchoo')
 
 
 

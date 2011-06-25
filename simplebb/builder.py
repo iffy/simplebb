@@ -33,7 +33,7 @@ class Builder:
         Initial set up of a request.
         """
         if 'uid' not in request:
-            request['uid'] = generateId()
+            request['uid'] = '%s-%s' % ('req', generateId())
         if 'time' not in request:
             request['time'] = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S %f%Z')
         
@@ -84,10 +84,10 @@ class FileBuilder(Builder, Emitter):
             build.version = version
             build.run()
             
-            self.emit(build.toDict())
+            self.emit(build.makeNote('start'))
             
             def emitDone(build, self):
-                self.emit(build.toDict())
+                self.emit(build.makeNote('done'))
             
             build.done.addCallback(emitDone, self)
         

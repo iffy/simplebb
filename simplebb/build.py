@@ -52,17 +52,23 @@ class Build:
         self._finish(self.status)
     
     
-    def toDict(self):
+    def makeNote(self, note=None):
         """
         Return a dictionary representation of this Build
         """
-        return dict(
+        build = dict(
             uid=self.uid,
             status=self.status,
             project=self.project,
             version=self.version,
             test_path=self.test_path,
             runtime=self.runtime)
+        uid = 'note-' + generateId()
+        return {
+            'uid':uid,
+            'build': build,
+            'note': note,
+        }
 
 
 
