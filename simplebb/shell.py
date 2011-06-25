@@ -33,6 +33,11 @@ class ShellProtocol(LineReceiver):
     def connectionMade(self):
         self.sendLine('Type "help" for help')
         self.showPrompt()
+        self.hub.addObserver(self)
+
+
+    def connectionLost(self, reason):
+        self.hub.remObserver(self)
 
 
     def lineReceived(self, line):
@@ -196,6 +201,7 @@ class ShellProtocol(LineReceiver):
         """
         request = dict(project=project, version=version, test_path=None)
         response = self.hub.build(request)
+        self.watchRequest(response['uid'])
         self.sendLine('Build requested: %s' % response['uid'])
     
     

@@ -6,6 +6,7 @@ from twisted.internet import defer
 from zope.interface.verify import verifyClass
 
 
+from simplebb.hub import Hub
 from simplebb.shell import ShellProtocol, ShellFactory
 from simplebb.interface import IObserver
 
@@ -312,6 +313,34 @@ class ShellProtocolTest(TestCase):
         s.noteReceived(note)
         self.assertEqual(len(called), 1)
         self.assertTrue('Some note' in called[0])
+
+
+    def test_connectionMade(self):
+        """
+        Should observe the hub
+        """
+        s = ShellProtocol()
+        s.sendLine = lambda x: None
+        s.showPrompt = lambda: None
+        s.hub = Hub()
+        called = []
+        s.hub.addObserver = called.append
+        s.connectionMade()
+        self.assertEqual(len(called), 1)
+        self.assertEqual(called[0], s)
+
+
+    def test_connectionLost(self):
+        """
+        Should stop observing the Hub
+        """
+        s = ShellProtocol()
+        s.hub = Hub()
+        called = []
+        s.hub.remObserver = called.append
+        s.connectionLost('foo')
+        self.assertEqual(called, [s], "Should call remObserver on the hub")
+        
         
 
 
@@ -377,6 +406,7 @@ class CommandsTest(TestCase):
             ('build', dict(project='project', version='version',
                 test_path=None)),
         ])
+        self.assertEqual(s.watching, ['something'])
 
 
     def test_start(self):

@@ -12,6 +12,7 @@ fb = FileBuilder('example/projects')
 
 h = Hub()
 h.addBuilder(fb)
+fb.addObserver(h)
 
 h.startServer(h.getPBServerFactory(), 'tcp:9222')
 h.startServer(h.getShellServerFactory(), 'tcp:9223')
