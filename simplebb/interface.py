@@ -13,6 +13,11 @@ class IBuild(Interface):
         ''')
 
 
+    req_uid = Attribute('''
+        str: the request id, if any, that prompted this Build's creation.
+        ''')
+
+
     status = Attribute('''
         int: status indicating success (0) or failure (non-0) of Build.
         

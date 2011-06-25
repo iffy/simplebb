@@ -22,6 +22,7 @@ class Build:
     implements(IBuild)
     
     uid = None
+    req_uid = None
     status = None
     project = None
     version = None

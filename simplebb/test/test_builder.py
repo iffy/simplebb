@@ -331,12 +331,17 @@ class FileBuilderTest(TestCase):
         b.emit = emit_called.append
         
         
-        b._build(dict(version='version', project='foo', test_path='bar'))
+        b._build(dict(uid='foo', version='version', project='foo',
+                      test_path='bar'))
         
         
         # version should be set on the Build
         self.assertEqual(r[0].version, 'version',
             "Should have set the version on the Build")
+        
+        # req_uid should be set on the Build
+        self.assertEqual(r[0].req_uid, 'foo',
+            "Should have set the req_uid on the Build")
         
         self.assertEqual(run_called, [True],
             "Build.run() should have been called")

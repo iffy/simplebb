@@ -82,6 +82,7 @@ class FileBuilder(Builder, Emitter):
         builds = self.findBuilds(project, test_path)
         for build in builds:
             build.version = version
+            build.req_uid = request['uid']
             build.run()
             
             self.emit(build.makeNote('start'))
@@ -91,7 +92,7 @@ class FileBuilder(Builder, Emitter):
             
             build.done.addCallback(emitDone, self)
         
-    
+
     def _findHeads(self, project, test_path=None):
         """
         Find the directory roots for a given project and test_path
