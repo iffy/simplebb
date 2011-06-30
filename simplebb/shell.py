@@ -62,7 +62,12 @@ class ShellProtocol(LineReceiver):
         """
         A note has been received
         """
-        self.sendLine(note['note'])
+        build = note.get('build', {})
+        req_uid = build.get('req_uid', None)
+        if req_uid in self.watching:
+            uid = build.get('uid', None)
+            _, uid = uid.split('-')
+            self.sendLine('%s: %s ' % (uid[:8], note['note']))
         
 
     def parseCmd(self, s):
@@ -202,7 +207,6 @@ class ShellProtocol(LineReceiver):
         request = dict(project=project, version=version, test_path=None)
         response = self.hub.build(request)
         self.watchRequest(response['uid'])
-        self.sendLine('Build requested: %s' % response['uid'])
     
     
     def cmd_start(self, endpoint):

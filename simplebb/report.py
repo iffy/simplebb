@@ -1,5 +1,5 @@
 from zope.interface import implements
-from simplebb.interface import IEmitter
+from simplebb.interface import IEmitter, IObserver
 
 import hashlib
 
@@ -45,4 +45,12 @@ class Emitter:
         for o in self._observers:
             o.noteReceived(note)
 
+
+
+class Observer:
+    """
+    I observe notes.
+    """
+
+    implements(IObserver)
 

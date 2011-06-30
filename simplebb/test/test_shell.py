@@ -308,11 +308,29 @@ class ShellProtocolTest(TestCase):
         called = []
         s.sendLine = called.append
         
-        note = {'build': {'req_uid': 'abcdef'}, 'note': 'Some note'}
+        note = {'build': {
+            'req_uid': 'abcdef',
+            'uid':'build-ABCDEFGHijklmnopq'
+        }, 'note': 'Some note'}
         
         s.noteReceived(note)
         self.assertEqual(len(called), 1)
         self.assertTrue('Some note' in called[0])
+        self.assertTrue('ABCDEFGH' in called[0], 'Should identify the build')
+
+
+    def test_noteReceived_nowatch(self):
+        """
+        If not watching anything, don't sent anything.
+        """
+        s = ShellProtocol()
+        called = []
+        s.sendLine = called.append
+        
+        note = {'build': {'req_uid': 'abcdef'}, 'note':'foo'}
+        
+        s.noteReceived(note)
+        self.assertEqual(len(called), 0) 
 
 
     def test_connectionMade(self):
@@ -398,10 +416,8 @@ class CommandsTest(TestCase):
         
         s.cmd_build('project', 'version')
         
-        self.assertNotEqual(sendLine_called, [],
-            "Should have sent something back")
-        self.assertTrue('something' in sendLine_called[0],
-            "Should include the build request uid in the response")
+        self.assertEqual(sendLine_called, [],
+            "Should not have sent something back")
         self.assertEqual(s.hub.called, [
             ('build', dict(project='project', version='version',
                 test_path=None)),

@@ -2,8 +2,8 @@ from twisted.trial.unittest import TestCase
 from zope.interface.verify import verifyClass, verifyObject
 
 
-from simplebb.interface import IEmitter
-from simplebb.report import Emitter
+from simplebb.interface import IEmitter, IObserver
+from simplebb.report import Emitter, Observer
 
 
 
@@ -88,4 +88,15 @@ class EmitterTest(TestCase):
             "received: %r" % note)
 
 
+
+class ObserverTest(TestCase):
+
+
+    def test_IObserver(self):
+        verifyClass(IObserver, Observer)
+        verifyObject(IObserver, Observer())
+
+
+    def noteReceived(self):
+    
 
