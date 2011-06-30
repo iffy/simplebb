@@ -51,7 +51,7 @@ class NotaryTest(TestCase):
 
     def test_createBuildResponse(self):
         """
-        You can create notes about builds.
+        You can create notes regarding build progress.
         """
         n = Notary()
         original = n.create()
@@ -69,4 +69,19 @@ class NotaryTest(TestCase):
         self.assertEqual(note, d, "should use Notary.create")
 
 
-
+    def test_createBuildInfo(self):
+        """
+        You can create notes describing builds
+        """
+        n = Notary()
+        
+        d = {}
+        n.create = lambda: d
+        
+        note = n.createBuildInfo('bob', 'proj', 'version', 'tp')
+        self.assertEqual(note, d, "should use Notary.create")
+        self.assertEqual(note['kind'], 'build')
+        self.assertEqual(note['builder'], 'bob')
+        self.assertEqual(note['project'], 'proj')
+        self.assertEqual(note['version'], 'version')
+        self.assertEqual(note['testpath'], 'tp')
