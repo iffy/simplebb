@@ -4,6 +4,8 @@ Messaging stuff goes in here
 
 import datetime
 
+from twisted.internet import reactor
+
 from simplebb.util import generateId
 
 
@@ -38,6 +40,22 @@ class Notary:
         return note
 
 
+    def createBuildInfo(self, builder, project, version, testpath):
+        """
+        Return a build info note
+        """
+        ret = self.create()
+        ret.update({
+            'kind': 'build',
+            'builder': 'bob',
+            'build_id': generateId(),
+            'project': project,
+            'version': version,
+            'testpath': testpath,
+        })
+        return ret
+
+
     def createBuildResponse(self, request, buildinfo, note):
         """
         Return a build response note.
@@ -53,6 +71,37 @@ class Notary:
         })
         return ret
 
+
+
+notary = Notary()
+
+
+
+class NoteTaker:
+    """
+    I take notes.
+    """
+    
+    reactor = reactor
+    
+    forgetInterval = 3600
+    
+    
+    def __init__(self):
+        self.received = set([])
+
+
+    def receiveNote(self, note):
+        """
+        Someone else has given me a note.
+        """
+        if note['uid'] in self.received:
+            return
+        self.received.add(note['uid'])
+        self.reactor.callLater(self.forgetInterval,
+                               self.received.remove, note['uid'])
+        
+        self.noteReceived(note)
 
 
 

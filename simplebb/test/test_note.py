@@ -1,7 +1,16 @@
 from twisted.trial.unittest import TestCase
+from twisted.internet.task import Clock
+from twisted.internet import reactor
+
+from simplebb.note import Notary, notary, NoteTaker
 
 
-from simplebb.note import Notary
+
+class notaryTest(TestCase):
+
+
+    def test_isNotary(self):
+        self.assertTrue(isinstance(notary, Notary))
 
 
 
@@ -82,10 +91,67 @@ class NotaryTest(TestCase):
         self.assertEqual(note, d, "should use Notary.create")
         self.assertEqual(note['kind'], 'build')
         self.assertEqual(note['builder'], 'bob')
+        self.assertNotEqual(note['build_id'], None)
         self.assertEqual(note['project'], 'proj')
         self.assertEqual(note['version'], 'version')
         self.assertEqual(note['testpath'], 'tp')
 
+
+
+class NoteTakerTest(TestCase):
+
+
+    def test_attrs(self):
+        """
+        Should have the following attributes.
+        """
+        nt = NoteTaker()
+        self.assertEqual(nt.reactor, reactor)
+        self.assertTrue(nt.forgetInterval >= 60*60, "Default forget should be"
+            "longer than an hour.")
+
+    def test_receiveNote(self):
+        """
+        receiveNote should call noteReceived in the default configuration
+        """
+        nt = NoteTaker()
+        nt.reactor = Clock()
+        called = []
+        nt.noteReceived = called.append
+        
+        n = notary.create()
+        nt.receiveNote(n)
+        
+        self.assertEqual(called, [n])
+        
+        nt.receiveNote(n)
+        self.assertEqual(called, [n], "Should not receive the same note again")
+        
+        nt.reactor.advance(nt.forgetInterval+1)
+
+
+    def test_expire(self):
+        """
+        receiveNote forgets what it received after forgetInterval
+        """
+        nt = NoteTaker()
+        nt.reactor = Clock()
+        nt.forgetInterval = 10
+        called = []
+        nt.noteReceived = called.append
+        n = notary.create()
+        
+        nt.receiveNote(n)
+        self.assertEqual(called, [n])
+        
+        nt.reactor.advance(9)
+        nt.receiveNote(n)
+        self.assertEqual(called, [n])
+        
+        nt.reactor.advance(2)
+        nt.receiveNote(n)
+        self.assertEqual(called, [n, n], 'After expiry, notes should be '
+            'received again.')
 
 
 
