@@ -85,3 +85,7 @@ class NotaryTest(TestCase):
         self.assertEqual(note['project'], 'proj')
         self.assertEqual(note['version'], 'version')
         self.assertEqual(note['testpath'], 'tp')
+
+
+
+
