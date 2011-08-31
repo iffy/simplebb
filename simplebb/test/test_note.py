@@ -48,3 +48,6 @@ class NoteTest(TestCase):
     def test_uid_unique(self):
         a, b = Note(), Note()
         self.assertNotEqual(a.uid, b.uid)
+
+
+

@@ -68,3 +68,23 @@ class IBuilder(Interface):
         """
 
 
+
+class IPublisher(Interface):
+    """
+    I can have subscribers
+    """
+
+    
+    def subscribe(func):
+        """
+        Subscribe the given function to be called when I publish
+        """
+
+
+    def unsubscribe(func):
+        """
+        Unsubscribe the given function from being called when I publish.
+        """
+
+
+
