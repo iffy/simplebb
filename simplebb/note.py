@@ -48,6 +48,7 @@ class Note:
     body = None
     
     build_uid = None
+    builder = None
     project = None
     version = None
 

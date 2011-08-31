@@ -34,6 +34,10 @@ class INote(Interface):
         The BuildRequest.uid that spawned this note.
         ''')
 
+    builder = Attribute('''
+        The builder's name
+        ''')
+
     project = Attribute('''
         Project name being built
         ''')
@@ -45,5 +49,22 @@ class INote(Interface):
     body = Attribute('''
         The body of the note.
         ''')
+
+
+
+class IBuilder(Interface):
+    """
+    I can handle BuildRequests
+    """
+    
+    name = Attribute('''
+        My name
+        ''')
+    
+    
+    def build(request):
+        """
+        I build according to the request.
+        """
 
 
